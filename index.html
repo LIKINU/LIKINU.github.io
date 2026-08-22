@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>(function(){ function s(){ document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px'); } s(); window.addEventListener('resize', s); })();</script>
+  <script>
+    /* 移动端禁止双指缩放：底图水印是 fixed 层，缩放会导致底图与内容错位；
+       锁死后白天版与暗色版一致，底图始终精确居中。不影响滚动与点击。 */
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+  </script>
+  <title>李鍵宇 / Rain Li · 个人主页</title>
+  <meta name="description" content="李鍵宇（Rain Li）——零予控股 CEO / KTSA 创始人。用 AI 与营销，把分散的资源连成自我造血的创业生态。" />
+  <link rel="stylesheet" href="assets/style.css?v=20260847" />
+  <link rel="stylesheet" href="assets/templates.css?v=20260845" />
+</head>
+<body>
+  <div class="linkyou-watermark" aria-hidden="true">
+    <img class="wm-light" src="assets/linkyou-logo.png?v=20260831" alt="" />
+    <img class="wm-dark" src="assets/linkyou-logo-dark.png?v=20260831" alt="" />
+  </div>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#/">
+        <span class="dot">李</span>
+        <span>李鍵宇</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#about">关于</a>
+        <a href="#skills">能力</a>
+        <a href="#projects">项目</a>
+        <a href="#contact">联系</a>
+        <button class="theme-btn" id="editBtn">编辑文字</button>
+        <button class="theme-btn" id="themeBtn" aria-label="切换主题"></button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app"><!-- 由 app.js 渲染 --></main>
+
+  <div class="edit-tools" id="editTools" hidden>
+    <span class="et-tip">编辑模式：点任意文字即可修改</span>
+    <button id="etExport" type="button">导出修改</button>
+    <button id="etImport" type="button">导入修改</button>
+    <button id="etReset" type="button">恢复默认</button>
+  </div>
+  <input type="file" id="etFile" accept="application/json,.json" hidden />
+
+  <script src="assets/data.js?v=20260832"></script>
+  <script src="assets/app.js?v=20260843"></script>
+  <script src="assets/fx.js?v=20260830"></script>
+  <script>
+  /* logo 跟随：上半段居中，滚到 footer 顶线时整体随上方内容上滑、停在线上方。
+     暗夜/星空模式会切换可见水印图（wm-light ↔ wm-dark），故每次都取当前可见的那张来量高度，
+     并在主题/星空模式切换后重新计算，避免取到被隐藏图的 0 高度。 */
+  (function () {
+    var wm = document.querySelector('.linkyou-watermark');
+    if (!wm) return;
+    function activeImg() {
+      var a = wm.querySelector('.wm-light'), b = wm.querySelector('.wm-dark');
+      if (b && b.offsetHeight > 0) return b;
+      if (a && a.offsetHeight > 0) return a;
+      return a || b;
+    }
+    function sync() {
+      var footer = document.querySelector('.footer');
+      if (!footer) return;
+      var img = activeImg();
+      var logoH = (img && img.offsetHeight) || 0;
+      var vh = window.innerHeight;
+      var center = vh / 2;
+      var lineTop = footer.getBoundingClientRect().top;
+      var gap = 12;
+      var trigger = center + logoH / 2 + gap; /* logo 底边刚要碰到线时开始抬起 */
+      if (lineTop < trigger) {
+        var desiredCenter = lineTop - logoH / 2 - gap; /* logo 底边落在线上方 gap */
+        var shift = desiredCenter - center; /* 负值 = 上移 */
+        wm.style.setProperty('--wm-shift', shift + 'px');
+      } else {
+        wm.style.setProperty('--wm-shift', '0px');
+      }
+    }
+    function start() {
+      if (!document.querySelector('.footer')) { requestAnimationFrame(start); return; }
+      sync();
+      window.addEventListener('scroll', sync, { passive: true });
+      window.addEventListener('resize', sync);
+      /* 主题/星空模式切换会改变可见水印图，下一帧重新量高度 */
+      if (window.MutationObserver) {
+        new MutationObserver(function () { requestAnimationFrame(sync); })
+          .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-tpl'] });
+      }
+      var themeBtn = document.getElementById('themeBtn');
+      if (themeBtn) themeBtn.addEventListener('click', function () { requestAnimationFrame(sync); });
+    }
+    start();
+  })();
+  </script>
+</body>
+</html>
