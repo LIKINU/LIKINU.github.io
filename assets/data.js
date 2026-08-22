@@ -32,7 +32,7 @@ window.PROFILE = {
   contacts: [
     { label: "邮箱 · rainLi0723@gmail.com" },
     { label: "微信 · rainLi0723" },
-    { label: "GitHub · rainli0723-dotcom" },
+    { label: "GitHub · LIKINU" },
   ],
 };
 
