@@ -490,12 +490,14 @@
       if (document.body.classList.contains("editing")) return;
       const bj = e.target.closest(".bonjour-link");
       if (bj) {
-        e.preventDefault();
         const url = bj.getAttribute("href");
         const inWeChat = /MicroMessenger/i.test(navigator.userAgent);
         if (inWeChat) {
-          window.location.href = url; // 微信内尝试唤起小程序
-        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          // 微信内：不拦截，放行原生 <a> 点击，由微信 WebView 唤起小程序
+          return;
+        }
+        e.preventDefault();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url).then(
             function () { toast("Bonjour 名片链接已复制，请在微信中打开"); },
             function () { toast("请复制此链接并在微信中打开：" + url); }
