@@ -209,7 +209,7 @@
     const bonjourBlock = bonjour
       ? '<a class="bonjour-link" data-bonjour href="' + bonjour.url + '">'
         + '<span class="bj-ic">' + svg("bizcard") + '</span>'
-        + '<span class="bj-tx"><span class="bj-t">' + tx("profile.bonjour", bonjour.label) + '</span><span class="bj-s">微信小程序 · 点击唤起</span></span>'
+        + '<span class="bj-tx"><span class="bj-t">' + tx("profile.bonjour", bonjour.label) + '</span><span class="bj-s">微信小程序 · 点击查看</span></span>'
         + '<span class="bj-go">' + svg("arrow") + '</span>'
         + '</a>'
       : "";
@@ -485,26 +485,43 @@
     toast._t = setTimeout(function () { t.classList.remove("show"); }, 2400);
   }
 
+  function openBonjourModal(url) {
+    let mask = document.getElementById("bj-mask");
+    if (mask) { mask.classList.add("show"); return; }
+    mask = document.createElement("div");
+    mask.id = "bj-mask";
+    mask.className = "bj-mask";
+    mask.innerHTML =
+      '<div class="bj-modal">' +
+        '<button class="bj-close" aria-label="关闭">&times;</button>' +
+        '<h3 class="bj-title">Bonjour 小程序名片</h3>' +
+        '<div class="bj-qr-wrap"><img class="bj-qr" src="assets/bonjour-qr.png" alt="Bonjour 小程序码" ' +
+          'onerror="this.parentNode.classList.add(\'no-qr\');this.style.display=\'none\';"></div>' +
+        '<p class="bj-tip">微信内长按上方小程序码即可识别打开；若未显示，请点下方复制链接，再到微信搜索「Bonjour」小程序。</p>' +
+        '<button class="bj-copy">复制名片链接</button>' +
+      '</div>';
+    document.body.appendChild(mask);
+    mask.addEventListener("click", function (e) {
+      if (e.target === mask || e.target.classList.contains("bj-close")) mask.classList.remove("show");
+    });
+    mask.querySelector(".bj-copy").addEventListener("click", function () {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(
+          function () { toast("已复制，请在微信中粘贴或搜索 Bonjour"); },
+          function () { toast("复制失败，链接：" + url); }
+        );
+      } else { toast("链接：" + url); }
+    });
+    requestAnimationFrame(function () { mask.classList.add("show"); });
+  }
+
   function initClicks() {
     document.getElementById("app").addEventListener("click", function (e) {
       if (document.body.classList.contains("editing")) return;
       const bj = e.target.closest(".bonjour-link");
       if (bj) {
-        const url = bj.getAttribute("href");
-        const inWeChat = /MicroMessenger/i.test(navigator.userAgent);
-        if (inWeChat) {
-          // 微信内：不拦截，放行原生 <a> 点击，由微信 WebView 唤起小程序
-          return;
-        }
         e.preventDefault();
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(url).then(
-            function () { toast("Bonjour 名片链接已复制，请在微信中打开"); },
-            function () { toast("请复制此链接并在微信中打开：" + url); }
-          );
-        } else {
-          toast("请复制此链接并在微信中打开：" + url);
-        }
+        openBonjourModal(bj.getAttribute("href"));
         return;
       }
       const card = e.target.closest(".card");
