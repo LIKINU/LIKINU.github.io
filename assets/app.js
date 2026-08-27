@@ -465,8 +465,7 @@
     if (btn) btn.innerHTML = svg(theme === "dark" ? "sun" : "moon");
   }
   function initTheme() {
-    const saved = localStorage.getItem("rainli-theme");
-    const theme = saved || "light";               // 默认亮色（蓝原版）
+    const theme = "light";               // 强制默认白天，不读历史偏好（避免微信记住旧 dark）
     applyTheme(theme);
     const btn = document.getElementById("themeBtn");
     btn.addEventListener("click", function () {
