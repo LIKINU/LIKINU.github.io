@@ -14,7 +14,7 @@
   </script>
   <title>李鍵宇 / Rain Li · 个人主页</title>
   <meta name="description" content="李鍵宇（Rain Li）——零予控股 CEO / KTSA 创始人。用 AI 与营销，把分散的资源连成自我造血的创业生态。" />
-  <link rel="stylesheet" href="assets/style.css?v=20260849" />
+  <link rel="stylesheet" href="assets/style.css?v=20260850" />
   <link rel="stylesheet" href="assets/templates.css?v=20260845" />
 </head>
 <body>
@@ -28,9 +28,6 @@
         <span class="dot">李</span>
         <span>李鍵宇</span>
       </a>
-      <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
       <nav class="nav-links">
         <a href="#about">关于</a>
         <a href="#skills">能力</a>
@@ -100,25 +97,6 @@
       if (themeBtn) themeBtn.addEventListener('click', function () { requestAnimationFrame(sync); });
     }
     start();
-  })();
-  </script>
-  <script>
-  /* 手机端汉堡菜单：点击展开/收起导航面板；点链接后自动收起 */
-  (function () {
-    var t = document.getElementById('navToggle');
-    var links = document.querySelector('.nav-links');
-    if (!t || !links) return;
-    t.addEventListener('click', function () {
-      var open = links.classList.toggle('open');
-      t.setAttribute('aria-expanded', open ? 'true' : 'false');
-      t.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
-    });
-    links.addEventListener('click', function (e) {
-      if (e.target.closest('a')) {
-        links.classList.remove('open');
-        t.setAttribute('aria-expanded', 'false');
-      }
-    });
   })();
   </script>
 </body>
