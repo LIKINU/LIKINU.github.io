@@ -566,7 +566,8 @@
   }
 
   function initEdit() {
-    document.getElementById("editBtn").addEventListener("click", toggleEdit);
+    const editBtnEl = document.getElementById("editBtn");
+    if (editBtnEl) editBtnEl.addEventListener("click", toggleEdit);
     document.getElementById("etExport").addEventListener("click", exportEdits);
     document.getElementById("etReset").addEventListener("click", resetEdits);
     const fileInput = document.getElementById("etFile");
