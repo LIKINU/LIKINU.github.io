@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="JSdVLj4LCL2T0I8vHGS6IE">
+<head data-page-node-id="vpeZBipBGA2Bo1FrwOMhwu">
+<meta charset="UTF-8" data-page-node-id="QD4ZQZnqO0q0eH0wjs2uuX">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="V5yfWh1lyEyGfd72YpsItx">
+<title>撞色流场 · 玫红 × 黑 · Crash Flow Engine</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #100e0f; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #fff; -webkit-font-smoothing: antialiased;
+  }
+  canvas#stage { display: block; position: fixed; inset: 0; width: 100%; height: 100%; background: #100e0f; }
+  .vignette {
+    pointer-events: none; position: fixed; inset: 0; z-index: 2;
+    background:
+      radial-gradient(ellipse at 50% 46%, transparent 30%, rgba(16,14,15,0.45) 78%, rgba(16,14,15,0.90) 100%),
+      radial-gradient(ellipse at 50% -10%, rgba(255,15,163,0.08), transparent 58%);
+  }
+  .grain {
+    pointer-events: none; position: fixed; inset: 0; opacity: 0.04;
+    mix-blend-mode: overlay; z-index: 3;
+    background-image:
+      repeating-radial-gradient(circle at 13% 27%, rgba(255,255,255,0.6) 0, rgba(255,255,255,0.6) 0.4px, transparent 0.4px, transparent 3px),
+      repeating-radial-gradient(circle at 78% 64%, rgba(255,200,220,0.5) 0, rgba(255,200,220,0.5) 0.4px, transparent 0.4px, transparent 4px);
+  }
+  .ui {
+    position: fixed; top: 24px; left: 28px; z-index: 5;
+    display: flex; flex-direction: column; gap: 14px; width: 340px;
+    max-height: calc(100vh - 48px); overflow-y: auto;
+    padding-right: 6px; pointer-events: none;
+    transition: opacity 260ms ease, transform 260ms ease;
+  }
+  .ui > * { pointer-events: auto; }
+  .ui.hidden { opacity: 0; transform: translateX(-16px); pointer-events: none; }
+  .ui.hidden > * { pointer-events: none; }
+  .quick {
+    position: sticky; top: 0; z-index: 3;
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 9px 8px; margin: 0 -8px; border-radius: 10px;
+    background: rgba(9,8,9,0.82); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,15,163,0.20);
+  }
+  .quick .btn { flex: 1 1 auto; }
+  .ui::-webkit-scrollbar { width: 6px; }
+  .ui::-webkit-scrollbar-thumb { background: rgba(255,15,163,0.55); border-radius: 4px; }
+  .eyebrow { font-size: 10px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: rgba(255,15,163,0.72); }
+  .heading { font-size: 24px; font-weight: 300; line-height: 1.05; letter-spacing: -0.01em; text-shadow: 0 0 28px rgba(255,15,163,0.35); }
+  .heading em { font-style: italic; background: linear-gradient(96deg,#ff0fa3,#ff5cab 55%,#ffb8e0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stats {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px 16px;
+    padding: 12px 16px; background: rgba(16,14,15,0.55);
+    border: 1px solid rgba(255,15,163,0.22); backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%); border-radius: 12px; font-variant-numeric: tabular-nums;
+  }
+  .stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .stat-label { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,15,163,0.65); white-space: nowrap; }
+  .stat-value { font-size: 17px; font-weight: 300; color: rgba(255,255,255,0.96); }
+  input.seed-input {
+    font-size: 15px; font-weight: 300; color: #fff; background: transparent;
+    border: none; border-bottom: 1px dashed rgba(255,15,163,0.45);
+    width: 100%; padding: 0 0 2px; font-family: inherit; outline: none;
+  }
+  input.seed-input:focus { border-bottom-color: #ff0fa3; }
+  .panel { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row-label { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: rgba(255,15,163,0.55); margin-bottom: 8px; }
+  .btn {
+    appearance: none; border: 1px solid rgba(255,15,163,0.45); background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.95); padding: 9px 14px; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase; border-radius: 999px; cursor: pointer;
+    transition: background 200ms ease, border-color 200ms ease, transform 120ms ease;
+    font-family: inherit; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); user-select: none;
+  }
+  .btn:hover { background: rgba(255,15,163,0.18); border-color: rgba(255,92,171,0.75); }
+  .btn:active { transform: scale(0.96); }
+  .btn.primary { background: linear-gradient(96deg,#ff0fa3,#ff5cab); border-color: #ff0fa3; color: #100e0f; font-weight: 600; }
+  .btn.active { background: rgba(255,15,163,0.22); border-color: #ff0fa3; }
+  .btn.tiny { padding: 6px 11px; font-size: 9px; letter-spacing: 0.14em; }
+  .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+  .sliders label { display: flex; flex-direction: column; gap: 5px; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,15,163,0.65); }
+  input[type=range] { width: 100%; accent-color: #ff0fa3; height: 3px; }
+  input.text-input {
+    width: 100%; margin-top: 8px; padding: 8px 12px; font-size: 11px; font-family: inherit;
+    color: #fff; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,15,163,0.28); border-radius: 8px; outline: none;
+  }
+  input.text-input:focus { border-color: #ff0fa3; }
+  select.hist {
+    width: 100%; margin-top: 8px; padding: 7px 10px; font-size: 10px; font-family: inherit;
+    color: #fff; background: rgba(16,14,15,0.9);
+    border: 1px solid rgba(255,15,163,0.28); border-radius: 8px; outline: none;
+  }
+  .toast {
+    position: fixed; bottom: 26px; left: 50%; transform: translate(-50%, 16px);
+    padding: 10px 18px; background: rgba(16,14,15,0.82); border: 1px solid rgba(255,15,163,0.32);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-radius: 999px;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(255,255,255,0.95); opacity: 0; pointer-events: none;
+    transition: opacity 240ms ease, transform 240ms ease; z-index: 6;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .hint {
+    position: fixed; bottom: 20px; right: 26px; font-size: 9px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: rgba(255,15,163,0.42); z-index: 5; pointer-events: none;
+  }
+  @media (max-width: 640px) { .ui { top: 14px; left: 14px; right: 14px; width: auto; } }
+
+  .btn.alt { border-style: dashed; }
+  .row-note { margin-top: 7px; font-size: 9px; letter-spacing: 0.1em; color: rgba(255,255,255,0.32); line-height: 1.6; }
+  .custom-row { align-items: center; }
+  .custom-row input[type=color] {
+    -webkit-appearance: none; appearance: none;
+    width: 34px; height: 26px; padding: 0; cursor: pointer;
+    border: 1px solid rgba(255,15,163,0.45); border-radius: 6px; background: transparent;
+  }
+  .custom-row input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
+  .custom-row input[type=color]::-webkit-color-swatch { border: none; border-radius: 4px; }
+
+  /* ---- output panel: previews + user-gesture saves (Safari-safe) ---- */
+  .out {
+    position: fixed; inset: 0; z-index: 20; display: none;
+    background: rgba(8,7,8,0.90); backdrop-filter: blur(10px);
+    padding: 34px 28px; overflow: auto;
+  }
+  .out.show { display: block; }
+  .out-head {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    max-width: 1240px; margin: 0 auto 18px;
+  }
+  .out-title {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+    color: #fff;
+  }
+  .out-sub { font-size: 10px; letter-spacing: 0.14em; color: rgba(255,255,255,0.42); }
+  .out-actions { margin-left: auto; display: flex; gap: 8px; }
+  .out-grid {
+    max-width: 1240px; margin: 0 auto; display: grid; gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+  .out-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,15,163,0.22);
+    border-radius: 12px; padding: 10px;
+  }
+  .out-card img, .out-card video {
+    display: block; width: 100%; height: auto; border-radius: 7px; background: #100E0F;
+  }
+  .out-meta {
+    display: flex; align-items: center; gap: 8px; margin-top: 9px;
+    font-size: 10px; letter-spacing: 0.1em; color: rgba(255,255,255,0.5);
+  }
+  .out-meta .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .out-card .save {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+    color: #FF0FA3; border: 1px solid rgba(255,15,163,0.5); border-radius: 999px;
+    background: transparent; padding: 5px 12px; font-family: inherit;
+  }
+  .out-card .save:hover { background: rgba(255,15,163,0.14); }
+  .out-tip {
+    max-width: 1240px; margin: 16px auto 0; font-size: 10px; letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.34); line-height: 1.7;
+  }
+</style>
+</head>
+<body data-page-node-id="VkIlw2ptYmVES6AVG7K6Pl">
+  <canvas id="stage" data-page-node-id="5fzRZ8CA3nbgPBuOuCl81B"></canvas>
+  <div class="vignette" data-page-node-id="gIrBZ6pM5VBBS9fGf8Xn88"></div>
+  <div class="grain" data-page-node-id="Uo1C4bDZ3KvOTw5MxuDvCB"></div>
+
+  <div class="ui" id="ui" data-page-node-id="N1kgRQS9duGsBvsv4RSKCD">
+    <div data-page-node-id="73189DhchSqoOvczuHXkOf">
+      <div class="eyebrow" data-page-node-id="xKHrpV1BIO9Leli1tG5m9o">Color Clash · 撞色视觉引擎</div>
+      <div class="heading" data-page-node-id="JY1GTY4nm21KAFhjoJwUuk">Hot Pink <em data-page-node-id="ufeL2p3hW9ZyaXlYRWGHWB">Flow Field</em></div>
+    </div>
+
+    <div class="quick">
+      <button class="btn tiny primary" id="qExport">導出</button>
+      <button class="btn tiny" id="qGif">GIF</button>
+      <button class="btn tiny" id="qSeq">序列</button>
+      <button class="btn tiny" id="qRec">錄影</button>
+    </div>
+
+    <div class="stats" data-page-node-id="AqKE0Zjf6CD6nRGnadyIji">
+      <div class="stat" data-page-node-id="6wdIJUjecwmWhdlLJtyyfE">
+        <div class="stat-label" data-page-node-id="xQJgBELgHhc3hCG7DbSz5a">Seed</div>
+        <input class="seed-input" id="seedInput" value="—" spellcheck="false" data-page-node-id="KcXXmuQ21zTEcDvMSHHtmn">
+      </div>
+      <div class="stat" data-page-node-id="RIrMhVi8ThelGRMjCzWFQG"><div class="stat-label" data-page-node-id="OrEZxJZpJQg7jDvdoNXVj1">Particles</div><div class="stat-value" id="pCount" data-page-node-id="oRvV52APCJjq6At6RJj5eb">—</div></div>
+      <div class="stat" data-page-node-id="Hv51PaxusPOrWditV3qw0s"><div class="stat-label" data-page-node-id="dmBZoD7GxWFDJ9rcBno7wv">FPS</div><div class="stat-value" id="fps" data-page-node-id="F61F1A5HWLwCiVTH1eU3QP">—</div></div>
+    </div>
+
+    <div class="panel" data-page-node-id="3vrOQDbRJWdUzKOHyG47Xz">
+      <button class="btn primary" id="regen" data-page-node-id="mBm2V0OHQ9kfEq0g6ig1kY">Regenerate</button>
+      <button class="btn" id="export" data-page-node-id="3LySQBcSdIoToVm6xt0vMg">Export</button>
+      <button class="btn" id="copyLink" data-page-node-id="iwwCVFxFBdFsBU3u3L4mhj">Copy Link</button>
+      <button class="btn" id="today" data-page-node-id="B8jRsYtAyYAPYPQnM9K4lR">今日一圖</button>
+      <button class="btn" id="randAll">隨機一切</button>
+    </div>
+
+    <div data-page-node-id="PFf7snwCBzErnDNdE7fQoN">
+      <div class="row-label" data-page-node-id="1EhdDeAQbvHsS4B1YOrfjn">形狀 · Form</div>
+      <div class="panel" id="modePanel" data-page-node-id="LoeFZBa7WPz4pp776KHegq">
+        <button class="btn tiny mode active" data-page-node-id="6khMjm5aAgWIqCrJypF0hQ">漩渦</button>
+        <button class="btn tiny mode" data-page-node-id="t79ZjKX2cdpWfOXhvbNtby">氣流</button>
+        <button class="btn tiny mode" data-page-node-id="4nmD0YTAql6QDFR3NAAheU">放射</button>
+        <button class="btn tiny mode" data-page-node-id="yPycIcizqesz8GHjJrrZbg">多渦</button>
+        <button class="btn tiny mode" data-page-node-id="emKi2tB7Klrl9Lat45JsGw">湍流</button>
+      
+        <button class="btn tiny mode">波紋</button>
+        <button class="btn tiny mode">螺旋</button>
+        <button class="btn tiny mode">綻放</button>
+        <button class="btn tiny mode">編織</button>
+        <button class="btn tiny mode">摺疊</button>
+        <button class="btn tiny alt" id="randMode">隨機</button>
+      </div>
+    </div>
+
+    <div data-page-node-id="0o9QTNAygA73pa5ufolE7P">
+      <div class="row-label" data-page-node-id="JnuFUpAqlQic5kI6xODxXl">配色 · Palette</div>
+      <div class="panel" id="palettePanel" data-page-node-id="625A5TaEdBqSFJ8FBeJm4a">
+        <button class="btn tiny swatch active" data-page-node-id="DRt6mumz9bsqDxuY2OX2nS">玫瑰金</button>
+        <button class="btn tiny swatch" data-page-node-id="3qSmfkit2p99MPUIRqWymC">霧藍</button>
+        <button class="btn tiny swatch" data-page-node-id="Y1BSfBuNYaEZZ63NA4O83M">電光</button>
+        <button class="btn tiny swatch" data-page-node-id="tcSSb1AuSTZthh4u6CUGKX">熔岩</button>
+        <button class="btn tiny swatch" data-page-node-id="kzutVI5EHwsJXqUcsHKv5M">霓虹</button>
+        <button class="btn tiny swatch" data-page-node-id="kHIdM58yRdGdDuPHkoAXle">琥珀</button>
+        <button class="btn tiny swatch" data-page-node-id="sW1YjGA6mwUDeT9AJ0CuGX">冰藍</button>
+        <button class="btn tiny swatch" data-page-node-id="e4uerkteXeAhwwjhBI0Wia">墨綠</button>
+      
+        <button class="btn tiny alt" id="randPal">隨機</button>
+      </div>
+    </div>
+    <div>
+      <div class="row-label">自訂配色 · Custom</div>
+      <div class="panel custom-row">
+        <input type="color" id="c0" value="#FF0FA3">
+        <input type="color" id="c1" value="#FFC0CB">
+        <input type="color" id="c2" value="#FFB347">
+        <input type="color" id="c3" value="#C77DFF">
+        <input type="color" id="c4" value="#2E2E2E">
+        <button class="btn tiny alt" id="resetCustom">用回預設</button>
+      </div>
+    </div>
+
+    <div data-page-node-id="p7dls9CwmFjX68gG3m5DKv">
+      <div class="row-label" data-page-node-id="cl8r5RTpaym35BGTK6UMjj">參數 · Flow</div>
+      <div class="sliders" data-page-node-id="SHY6pdTUbWkbFW5PAg3fwt">
+        <label data-page-node-id="wtCAGHRhITcWiSoXX8NPF5">湍流 <input type="range" id="sTurns" min="0.3" max="4" step="0.1" data-page-node-id="J4luAWcJwcEjr3Jx5aNhHx"></label>
+        <label data-page-node-id="EKyqBfZfOdv9GHAecQeT7I">速度 <input type="range" id="sSpeed" min="0.4" max="3" step="0.1" data-page-node-id="17qMnQoVMYFo1yabSxPJrh"></label>
+        <label data-page-node-id="eowU8F5pKxpEy8qpsHvlu6">拖尾 <input type="range" id="sFade"  min="0.012" max="0.12" step="0.004" data-page-node-id="0gvvYk0SPhBqUsClHt6VuP"></label>
+        <label data-page-node-id="QPYPapXQW9yDdL7ZveWHji">密度 <input type="range" id="sCount" min="1500" max="14000" step="500" data-page-node-id="ByRrcfQOsuOniHKrLCZe2p"></label>
+      </div>
+    </div>
+
+    <div data-page-node-id="OUTMNvqf24rb6jGujkAaJP">
+      <div class="row-label" data-page-node-id="uCuH3XDBXRdtUeHcnX6bWm">導出 · Export</div>
+      <div class="panel" id="sizePanel" data-page-node-id="nSGnTeBnugGvUGLpK4duET">
+        <button class="btn tiny size" data-s="1" data-page-node-id="hYBxpkfzxnsvbKynIFH7G6">1×</button>
+        <button class="btn tiny size active" data-s="2" data-page-node-id="n0hWi0moX62XNDW7LMooJH">2×</button>
+        <button class="btn tiny size" data-s="4" data-page-node-id="oU10SYxpvdZIPlEhyvKPnU">4×</button>
+        <button class="btn tiny" id="batch" data-page-node-id="tQWD8BfTFLqsesFAsDJas3">批量 5 張</button>
+      </div>
+      <div class="panel" id="fmtPanel">
+        <button class="btn tiny fmt active">PNG</button>
+        <button class="btn tiny fmt">JPG</button>
+      </div>
+      <input class="text-input" id="titleText" placeholder="標題（燒進圖裡，可留空）" spellcheck="false" data-page-node-id="wSBpJTcmI7dI3YcDZXvEJW">
+      <input class="text-input" id="subText" placeholder="副標題 / 日期 / 署名" spellcheck="false" data-page-node-id="2VIBSBDivrKubA0iV1fSQa">
+      <select class="hist" id="history" data-page-node-id="tehmka4RG1pzq7TKmkPngu"><option value="" data-page-node-id="D7QShUQxCKY5UCR61b1tvZ">歷史存檔（最近 30 張）</option></select>
+    </div>
+
+    <div>
+      <div class="row-label">錄影 · Record（錄下流動過程）</div>
+      <div class="panel" id="recPanel">
+        <button class="btn tiny recdur">5s</button>
+        <button class="btn tiny recdur active">10s</button>
+        <button class="btn tiny recdur">20s</button>
+        <button class="btn tiny" id="record">錄製</button>
+      </div>
+      <div class="row-note">即時錄製畫面上看到的流動，結束後到輸出面板保存</div>
+    </div>
+
+    <div>
+      <div class="row-label">動畫 · GIF / PNG 序列</div>
+      <div class="panel" id="animFPanel">
+        <button class="btn tiny af">60 幀</button>
+        <button class="btn tiny af active">120 幀</button>
+        <button class="btn tiny af">240 幀</button>
+      </div>
+      <div class="panel" id="animWPanel">
+        <button class="btn tiny aw">480</button>
+        <button class="btn tiny aw active">720</button>
+        <button class="btn tiny aw">1080</button>
+      </div>
+      <div class="panel">
+        <button class="btn tiny" id="makeGif">做成 GIF</button>
+        <button class="btn tiny" id="makeSeq">PNG 序列</button>
+      </div>
+      <div class="row-note">GIF：公眾號動圖／網頁直接放 · PNG 序列：丟進 AE / PR 自己合成 · 20fps</div>
+    </div>
+  </div>
+
+  <div class="hint" data-page-node-id="nJz7XpxQpNtMa3E9oOHlCG">H 隱藏面板 · Space 重生成 · S 導出 · Esc 關閉輸出</div>
+  <div class="toast" id="toast" data-page-node-id="yaG5haXEnoy69k7MZrObbS">Saved</div>
+
+  <div class="out" id="outPanel">
+    <div class="out-head">
+      <div class="out-title">Output · 輸出</div>
+      <div class="out-sub" id="outSub"></div>
+      <div class="out-actions">
+        <button class="btn tiny" id="outZip">全部存成 ZIP</button>
+        <button class="btn tiny" id="outClose">關閉</button>
+      </div>
+    </div>
+    <div class="out-grid" id="outGrid"></div>
+    <div class="out-tip">
+      Safari 会拦掉「非用户点击触发」的下载，所以这里用你自己点的「保存」来落盘 —— 一张一下，稳。<br>
+      也可以直接在图上按右键 / 长按选「存储图像」。
+    </div>
+  </div>
+
+<script>
+'use strict';
+
+/* ==================== Perlin 2D Noise ==================== */
+class Perlin {
+  constructor(seed = 1337) {
+    this.p = new Uint8Array(512);
+    const perm = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) perm[i] = i;
+    let s = (seed >>> 0) || 1;
+    for (let i = 255; i > 0; i--) {
+      s = (s * 16807) % 2147483647;
+      const j = s % (i + 1);
+      const tmp = perm[i]; perm[i] = perm[j]; perm[j] = tmp;
+    }
+    for (let i = 0; i < 512; i++) this.p[i] = perm[i & 255];
+  }
+  static fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+  static lerp(a, b, t) { return a + t * (b - a); }
+  static grad(hash, x, y) {
+    switch (hash & 7) {
+      case 0: return x + y; case 1: return -x + y; case 2: return x - y; case 3: return -x - y;
+      case 4: return x; case 5: return -x; case 6: return y; default: return -y;
+    }
+  }
+  noise(x, y) {
+    const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+    x -= Math.floor(x); y -= Math.floor(y);
+    const u = Perlin.fade(x), v = Perlin.fade(y);
+    const aa = this.p[this.p[X] + Y], ba = this.p[this.p[X + 1] + Y];
+    const ab = this.p[this.p[X] + Y + 1], bb = this.p[this.p[X + 1] + Y + 1];
+    return Perlin.lerp(
+      Perlin.lerp(Perlin.grad(aa, x, y), Perlin.grad(ba, x - 1, y), u),
+      Perlin.lerp(Perlin.grad(ab, x, y - 1), Perlin.grad(bb, x - 1, y - 1), u), v);
+  }
+  fbm(x, y, oct = 4, lac = 2.0, gain = 0.5) {
+    let total = 0, amp = 1, freq = 1, norm = 0;
+    for (let i = 0; i < oct; i++) { total += this.noise(x * freq, y * freq) * amp; norm += amp; amp *= gain; freq *= lac; }
+    return total / norm;
+  }
+}
+
+/* ==================== Palettes ==================== */
+const PALETTES = {
+  rose:     ['#FF0FA3', '#FFC0CB', '#FFB347', '#C77DFF', '#2E2E2E'],
+  mist:     ['#FF0FA3', '#8FA8B8', '#D9C9A8', '#3F5A5A', '#333333'],
+  electric: ['#FF0FA3', '#00E5C0', '#0047AB', '#FFC400', '#2E2E2E'],
+  lava:     ['#FF0FA3', '#FF6B00', '#B4E600', '#00857A', '#2E2E2E'],
+  neon:     ['#FF0FA3', '#9BE000', '#0047AB', '#C1006E', '#2E2E2E'],
+  amber:    ['#FF0FA3', '#FFA000', '#004B7C', '#1B6B3A', '#2E2E2E'],
+  ice:      ['#FF0FA3', '#00D4FF', '#0033A0', '#B4E600', '#2E2E2E'],
+  jade:     ['#FF0FA3', '#00E5A0', '#0A3D2E', '#FFD400', '#2E2E2E']
+};
+const PALETTE_KEYS = Object.keys(PALETTES);
+let currentPalette = 'rose';
+
+/* ==================== Form modes ==================== */
+const MODES = ['vortex', 'stream', 'radiate', 'multi', 'turb',
+               'wave', 'spiral', 'bloom', 'weave', 'fold'];
+let currentMode = 'vortex';
+
+/* ==================== Custom palette ==================== */
+let customCols = ['#FF0FA3', '#FFC0CB', '#FFB347', '#C77DFF', '#2E2E2E'];
+let usingCustom = false;
+let stillFmt = 'png';   // 'png' | 'jpg' — JPG keeps 公众号 uploads under the 10MB cap
+function activeColors() { return usingCustom ? customCols : PALETTES[currentPalette]; }
+
+function hsl2hex(h, s, l) {
+  h = (((h % 360) + 360) % 360) / 360;
+  let r, g, b;
+  if (s === 0) { r = g = b = l; }
+  else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    const hk = t => {
+      if (t < 0) t += 1; if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    r = hk(h + 1 / 3); g = hk(h); b = hk(h - 1 / 3);
+  }
+  const to = v => ('0' + Math.round(v * 255).toString(16)).slice(-2);
+  return ('#' + to(r) + to(g) + to(b)).toUpperCase();
+}
+
+// Random clash palette: hero pink fixed + 3 hues triadic-spread, saturated but
+// kept DARK (l 0.40-0.54) + neutral dark anchor.
+function randomPalette() {
+  const base = Math.random() * 360;
+  const cols = ['#FF0FA3'];
+  for (let i = 0; i < 3; i++) {
+    const h = (base + 40 + i * 118 + Math.random() * 46) % 360;
+    cols.push(hsl2hex(h, 1, 0.40 + Math.random() * 0.14));
+  }
+  cols.push('#2E2E2E');
+  customCols = cols; usingCustom = true;
+}
+
+/* ==================== Seeded RNG (one seed = one image) ==================== */
+let rngState = 1;
+function srand(s) { rngState = (s >>> 0) || 1; }
+function rnd() { rngState = (rngState * 1664525 + 1013904223) >>> 0; return rngState / 4294967296; }
+
+/* ==================== Colours ==================== */
+function hexToRgb(hex) { const v = parseInt(hex.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; }
+function hexCore(hex, a) { if (a == null) a = 0.7; const [r, g, b] = hexToRgb(hex); return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')'; }
+function hexHalo(hex, a) { if (a == null) a = 0.08; const [r, g, b] = hexToRgb(hex); const f = x => (Math.min(255, x + (255 - x) * 0.35) | 0); return 'rgba(' + f(r) + ',' + f(g) + ',' + f(b) + ',' + a + ')'; }
+
+let coreColors = [], haloColors = [], BUCKETS = 0;
+function rebuildColors() {
+  const cols = activeColors();
+  coreColors = cols.map((hex, i) => hexCore(hex, i === 0 ? 0.6 : 0.9));
+  haloColors = cols.map((hex, i) => hexHalo(hex, i === 0 ? 0.06 : 0.12));
+  BUCKETS = cols.length;
+}
+
+/* ==================== Canvas ==================== */
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+let W = 0, H = 0, DPR = 1;
+const BASE_BG = '#100e0f';
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = Math.floor(W * DPR);
+  canvas.height = Math.floor(H * DPR);
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  initFoci();
+  ctx.fillStyle = BASE_BG; ctx.fillRect(0, 0, W, H);
+}
+
+/* ==================== Particles / params ==================== */
+const MAX_COUNT = 14000;
+const LIFE_MAX = 340;
+const particles = new Float32Array(MAX_COUNT * 7);
+const P = { turns: 1.5, speed: 1.3, fade: 0.055, count: 6000 };
+const NS = 0.0015, DRIFT = 0.00022, VORTEX_W = 0.62, VORTEX_R = 0.40;
+/* Birth-pattern extent as a fraction of the frame. <1.0 keeps the composition
+   inside the canvas with breathing room; =1.0 bleeds to the edges (looks busy). */
+const SPREAD = 0.86;
+/* Per-generation geometric parameters for the shapes that have structure
+   beyond "just flow into the field" (spiral arms, wave rings, bloom petals,
+   weave bands, fold grid). presetGeo() restores the canonical values for the
+   named mode buttons; randomGeo() rolls fresh ones within a sensible range,
+   so 隨機 can produce a genuine variant instead of just swapping presets. */
+const GEO_DEFAULT = {
+  rings: 7, arms: 3, tight: 0.19,
+  petals: 5, petals2: 8,
+  bands: 9, cols: 12, rows: 8,
+  spokeVar: 0.55, jitter: 0.94, twist: 0.35
+};
+let GEO = Object.assign({}, GEO_DEFAULT);
+function presetGeo() { GEO = Object.assign({}, GEO_DEFAULT); }
+function randomGeo() {
+  GEO = {
+    rings: 4 + (Math.random() * 6 | 0),
+    arms: 1 + (Math.random() * 5 | 0),
+    tight: +(0.10 + Math.random() * 0.22).toFixed(3),
+    petals: 3 + (Math.random() * 6 | 0),
+    petals2: 5 + (Math.random() * 8 | 0),
+    bands: 4 + (Math.random() * 10 | 0),
+    cols: 6 + (Math.random() * 10 | 0),
+    rows: 4 + (Math.random() * 8 | 0),
+    spokeVar: +(0.40 + Math.random() * 0.40).toFixed(3),
+    jitter: +(0.86 + Math.random() * 0.14).toFixed(3),
+    twist: +(0.10 + Math.random() * 0.80).toFixed(2)
+  };
+}
+function resetDefaults() {
+  P.turns = 1.5; P.speed = 1.3; P.fade = 0.055; P.count = 6000;
+  GEO = Object.assign({}, GEO_DEFAULT);
+  for (const [id, k] of [['sTurns', 'turns'], ['sSpeed', 'speed'], ['sFade', 'fade'], ['sCount', 'count']]) {
+    const el = document.getElementById(id); if (el) el.value = P[k];
+    if (k === 'count') { const pc = document.getElementById('pCount'); if (pc) pc.textContent = P.count.toLocaleString(); }
+  }
+}
+/* Short label of what 隨機 just rolled, so the toast says something useful. */
+function describeGeo() {
+  const bits = [];
+  if (currentMode === 'spiral')   bits.push(GEO.arms + '臂');
+  if (currentMode === 'wave')     bits.push(GEO.rings + '环');
+  if (currentMode === 'bloom')    bits.push(GEO.petals + '+' + GEO.petals2 + '瓣');
+  if (currentMode === 'weave')    bits.push(GEO.bands + '带');
+  if (currentMode === 'fold')     bits.push(GEO.cols + '×' + GEO.rows);
+  if (currentMode === 'radiate')  bits.push('t=' + GEO.tight);
+  bits.push('spread ' + (SPREAD * 100).toFixed(0) + '%');
+  return bits.join(' ');
+}
+
+let perlin = null, seed = 0, noiseT = 0;
+let FX = 0, FY = 0, foci = [];
+
+function padHex(n, w) { let s = (n >>> 0).toString(16).toUpperCase(); while (s.length < w) s = '0' + s; return s.slice(-w); }
+/* local-time timestamp (was UTC — filenames looked 8h off for the user) */
+function stamp() {
+  const d = new Date(), p = n => (n < 10 ? '0' : '') + n;
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+         '-' + p(d.getHours()) + '-' + p(d.getMinutes()) + '-' + p(d.getSeconds());
+}
+
+function initFoci() {
+  FX = W * (0.32 + rnd() * 0.36);
+  FY = H * (0.34 + rnd() * 0.32);
+  foci = [];
+  const n = 2 + (rnd() * 2 | 0);
+  for (let i = 0; i < n; i++) {
+    foci.push({ x: W * (0.18 + rnd() * 0.64), y: H * (0.18 + rnd() * 0.64), s: rnd() < 0.5 ? -1 : 1 });
+  }
+}
+
+/* Each mode seeds its own geometry — this is what makes the shapes read as
+   genuinely different instead of "the same swirl, slightly rotated".
+   Seeded from `rnd()`, so a given (seed, mode) always rebuilds identically. */
+/* One function decides where a particle is born, and BOTH the initial seeding
+   and every respawn go through it. That sharing is the whole point: when
+   respawn used to fall back to a generic centred disc, every mode converged to
+   the same picture once LIFE_MAX frames had gone by, so switching shape looked
+   like it did nothing. Geometry has to be re-established on every birth.
+   Reads `rnd()`, so a given (seed, mode) always rebuilds identically. */
+const _spawn = [0, 0];
+/* A mode decides the PATTERN of where particles are born, not how big that
+   pattern is. Every pattern is stretched to span the whole canvas — otherwise
+   a small pattern plus the ~220px a particle can travel in its lifetime leaves
+   the composition as a blob on one side with most of the frame empty.
+   `reach` is the distance from the pattern's own centre to the farthest corner,
+   which is what focus-centred patterns need in order to touch the far edge. */
+function spawnXY(mode, w, h, fx, fy) {
+  const cx = w * 0.5, cy = h * 0.5;
+  const RX = w * 0.5 * SPREAD, RY = h * 0.5 * SPREAD;
+  const reachFromFocus = Math.max(
+    Math.hypot(fx, fy), Math.hypot(w - fx, fy),
+    Math.hypot(fx, h - fy), Math.hypot(w - fx, h - fy)
+  ) * SPREAD;
+  const sx = w / (W || w), sy = h / (H || h);
+  const MX = w * (1 - SPREAD) * 0.5, MY = h * (1 - SPREAD) * 0.5;   // margin
+  switch (mode) {
+    case 'stream':
+      _spawn[0] = MX + rnd() * (w - 2 * MX);
+      _spawn[1] = MY + rnd() * (h - 2 * MY);
+      break;
+    case 'radiate': {
+      const a = rnd() * Math.PI * 2;
+      const r = Math.pow(rnd(), GEO.spokeVar) * reachFromFocus;
+      _spawn[0] = fx + Math.cos(a) * r; _spawn[1] = fy + Math.sin(a) * r;
+      break;
+    }
+    case 'spiral': {
+      const r = Math.pow(rnd(), 0.5) * reachFromFocus;
+      const arm = Math.floor(rnd() * GEO.arms) * (Math.PI * 2 / GEO.arms);
+      const th = Math.log(Math.max(r, 1) / (w * 0.02)) / GEO.tight + arm + (rnd() - 0.5) * GEO.twist;
+      _spawn[0] = fx + Math.cos(th) * r; _spawn[1] = fy + Math.sin(th) * r;
+      break;
+    }
+    case 'wave': {
+      const a = rnd() * Math.PI * 2;
+      const ring = Math.floor(rnd() * GEO.rings);
+      const r = reachFromFocus * (0.10 + ring * (0.90 / GEO.rings)) * (GEO.jitter + rnd() * 0.12);
+      _spawn[0] = fx + Math.cos(a) * r; _spawn[1] = fy + Math.sin(a) * r;
+      break;
+    }
+    case 'multi': {
+      const f = (foci && foci.length) ? foci[Math.floor(rnd() * foci.length)] : { x: cx, y: cy };
+      const ffx = f.x * sx, ffy = f.y * sy;
+      const fr = Math.max(Math.hypot(ffx, ffy), Math.hypot(w - ffx, ffy),
+                          Math.hypot(ffx, h - ffy), Math.hypot(w - ffx, h - ffy)) * SPREAD;
+      const a = rnd() * Math.PI * 2;
+      const r = Math.pow(rnd(), 0.62) * fr * 0.92;
+      _spawn[0] = ffx + Math.cos(a) * r; _spawn[1] = ffy + Math.sin(a) * r;
+      break;
+    }
+    case 'bloom': {
+      const ring = Math.floor(rnd() * 2);
+      const nn = ring === 0 ? GEO.petals : GEO.petals2;
+      const ci = Math.floor(rnd() * nn);
+      const ca = ci / nn * Math.PI * 2 + 0.4 + ring * GEO.twist;
+      const rad = reachFromFocus * (ring === 0 ? 0.28 : 0.62);
+      const bx = cx + Math.cos(ca) * rad, by = cy + Math.sin(ca) * rad;
+      const a2 = rnd() * Math.PI * 2, r2 = Math.pow(rnd(), 0.6) * reachFromFocus * 0.16;
+      _spawn[0] = bx + Math.cos(a2) * r2; _spawn[1] = by + Math.sin(a2) * r2;
+      break;
+    }
+    case 'weave': {                         // horizontal bands
+      const band = Math.floor(rnd() * GEO.bands);
+      _spawn[0] = MX + rnd() * (w - 2 * MX);
+      _spawn[1] = MY + (band + 0.5) / GEO.bands * (h - 2 * MY) + (rnd() - 0.5) * h * 0.035;
+      break;
+    }
+    case 'fold': {                          // coarse grid nodes → sharp creases
+      _spawn[0] = MX + (Math.floor(rnd() * GEO.cols) + 0.5) / GEO.cols * (w - 2 * MX) + (rnd() - 0.5) * w * 0.03;
+      _spawn[1] = MY + (Math.floor(rnd() * GEO.rows) + 0.5) / GEO.rows * (h - 2 * MY) + (rnd() - 0.5) * h * 0.03;
+      break;
+    }
+    case 'turb':                            // full-frame chaos
+      _spawn[0] = MX + rnd() * (w - 2 * MX); _spawn[1] = MY + rnd() * (h - 2 * MY);
+      break;
+    default: {                              // vortex — disc stretched, with margin
+      const a = rnd() * Math.PI * 2;
+      const r = Math.pow(rnd(), 0.55);
+      _spawn[0] = cx + Math.cos(a) * RX * r; _spawn[1] = cy + Math.sin(a) * RY * r;
+    }
+  }
+  return _spawn;
+}
+function seedParticles(arr, count, w, h, mode, fx, fy) {
+  for (let i = 0; i < count; i++) {
+    const k = i * 7;
+    const p = spawnXY(mode, w, h, fx, fy);
+    const x = p[0], y = p[1];
+    arr[k] = x; arr[k + 1] = y; arr[k + 2] = x; arr[k + 3] = y;
+    arr[k + 4] = rnd() * LIFE_MAX; arr[k + 5] = rnd() * 2 - 1; arr[k + 6] = 1.1 + rnd() * 0.7;
+  }
+}
+
+function initAll() {
+  if (!seed) seed = (Math.random() * 0x100000000) >>> 0;
+  srand(seed);
+  perlin = new Perlin(seed);
+  initFoci();
+  seedParticles(particles, MAX_COUNT, W, H, currentMode, FX, FY);
+  ctx.fillStyle = BASE_BG; ctx.fillRect(0, 0, W, H);
+  noiseT = 0;
+  syncUI();
+}
+
+/* ============ Shared field step (used by BOTH live loop and export) ============ */
+function stepField(c, w, h, arr, count, sc, fx, fy, fcs, t) {
+  c.globalCompositeOperation = 'source-over';
+  c.fillStyle = 'rgba(16,14,15,' + P.fade + ')';
+  c.fillRect(0, 0, w, h);
+
+  const paths = new Array(BUCKETS);
+  for (let b = 0; b < BUCKETS; b++) paths[b] = new Path2D();
+  c.lineCap = 'round'; c.lineJoin = 'round';
+
+  const dX = t * 0.5, dY = t * 0.35;
+  const minDim = Math.min(w, h);
+  const vScale = minDim * VORTEX_R;
+  const ns = NS / sc, sp = P.speed * sc;
+
+  for (let i = 0; i < count; i++) {
+    const k = i * 7;
+    const x = arr[k], y = arr[k + 1];
+    const px = arr[k + 2], py = arr[k + 3];
+    let life = arr[k + 4];
+    const hueShift = arr[k + 5];
+
+    const n = perlin.fbm(x * ns + dX, y * ns + dY, 3);
+    const fieldAng = n * Math.PI * 2 * P.turns + t * 0.3;
+    const dx = x - fx, dy = y - fy;
+    const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
+    const rad = Math.atan2(dy, dx);
+
+    let ang;
+    switch (currentMode) {
+      case 'stream':
+        ang = -0.18 + n * 1.15 + 0.12 * Math.sin(y * 0.004 / sc + t * 0.6);
+        break;
+      case 'radiate':
+        ang = rad + n * 0.7;
+        break;
+      case 'multi': {
+        let vx = 0, vy = 0;
+        const rr = vScale * 0.55, rr2 = rr * rr;
+        for (let fi = 0; fi < fcs.length; fi++) {
+          const f = fcs[fi];
+          const ax = x - f.x, ay = y - f.y;
+          const wgt = 1 / (1 + (ax * ax + ay * ay) / rr2);
+          const a = Math.atan2(ay, ax) + Math.PI * 0.5 * f.s;
+          vx += Math.cos(a) * wgt; vy += Math.sin(a) * wgt;
+        }
+        vx += Math.cos(fieldAng) * 0.45; vy += Math.sin(fieldAng) * 0.45;
+        ang = Math.atan2(vy, vx);
+        break;
+      }
+      case 'turb':
+        ang = n * Math.PI * 2 * 3.2;
+        break;
+      case 'wave':
+        ang = rad + Math.PI * 0.5 + Math.sin(dist * 0.02 / sc + t * 1.6) * 1.15;
+        break;
+      case 'spiral':
+        ang = rad + Math.PI * 0.5 + 0.58 + n * 0.3;
+        break;
+      case 'bloom': {
+        const wx = perlin.fbm(x * ns * 0.7 + 31.4, y * ns * 0.7 - 7.7, 2);
+        const wy = perlin.fbm(x * ns * 0.7 - 19.1, y * ns * 0.7 + 44.2, 2);
+        const nb = perlin.fbm((x + wx * 260 * sc) * ns + dX, (y + wy * 260 * sc) * ns + dY, 3);
+        ang = nb * Math.PI * 2 * P.turns + t * 0.3;
+        break;
+      }
+      case 'weave': {
+        const band = Math.sin(y * 0.012 / sc + Math.sin(x * 0.005 / sc) * 1.6);
+        ang = (band > 0 ? 0.12 : Math.PI - 0.12) + n * 0.6;
+        break;
+      }
+      case 'fold': {
+        const q = Math.PI / 2;
+        ang = Math.round(fieldAng / q) * q + n * 0.22;
+        break;
+      }
+      default: {
+        const tang = rad + Math.PI * 0.5;
+        const wgt = VORTEX_W * Math.exp(-dist / vScale);
+        ang = fieldAng * (1 - wgt) + tang * wgt;
+      }
+    }
+
+    const nx = x + Math.cos(ang) * sp, ny = y + Math.sin(ang) * sp;
+    life -= 1;
+
+    if (life <= 0 || nx < -12 || nx > w + 12 || ny < -12 || ny > h + 12) {
+      // Rebirth must re-establish the mode's geometry, or every mode decays
+      // into the same centred disc within LIFE_MAX frames.
+      const p = spawnXY(currentMode, w, h, fx, fy);
+      arr[k] = p[0]; arr[k + 1] = p[1]; arr[k + 2] = p[0]; arr[k + 3] = p[1];
+      arr[k + 4] = rnd() * LIFE_MAX;
+      continue;
+    }
+
+    const lc = perlin.fbm(nx * ns * 0.6 + 91.7, ny * ns * 0.6 - 13.3, 2);
+    let tt = (lc + 1) * 0.5 + hueShift * 0.18;
+    tt = tt < 0 ? 0 : tt > 1 ? 1 : tt;
+    let b;
+    if (tt < 0.35) b = 0;
+    else { b = 1 + (((tt - 0.35) / 0.65) * (BUCKETS - 1) | 0); if (b >= BUCKETS) b = BUCKETS - 1; }
+    paths[b].moveTo(px, py); paths[b].lineTo(nx, ny);
+    arr[k] = nx; arr[k + 1] = ny; arr[k + 2] = nx; arr[k + 3] = ny; arr[k + 4] = life;
+  }
+
+  c.globalCompositeOperation = 'lighter';
+  c.lineWidth = 3.6 * sc;
+  for (let b = 0; b < BUCKETS; b++) { c.strokeStyle = haloColors[b]; c.stroke(paths[b]); }
+  c.globalCompositeOperation = 'source-over';
+  c.lineWidth = 1.3 * sc;
+  for (let b = 0; b < BUCKETS; b++) { c.strokeStyle = coreColors[b]; c.stroke(paths[b]); }
+}
+
+/* ==================== Live loop ==================== */
+const fpsEl = document.getElementById('fps');
+let frames = 0, fpsLast = performance.now();
+function frame(now) {
+  noiseT += DRIFT;
+  stepField(ctx, W, H, particles, P.count, 1, FX, FY, foci, noiseT);
+  frames++;
+  if (now - fpsLast >= 500) {
+    fpsEl.textContent = ((frames * 1000) / (now - fpsLast)).toFixed(0);
+    frames = 0; fpsLast = now;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ==================== Toast ==================== */
+const toastEl = document.getElementById('toast');
+function showToast(msg, sticky) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(showToast._t);
+  if (!sticky) showToast._t = setTimeout(() => toastEl.classList.remove('show'), 1800);
+}
+
+/* ==================== Export: offscreen re-render, chunked ==================== */
+let exportScale = 2;
+let exporting = false;
+const MAX_EXPORT_PARTICLES = 16000;
+const EXPORT_FRAMES = 320;
+
+function drawOverlay(c, w, h) {
+  const title = (document.getElementById('titleText').value || '').trim();
+  const sub = (document.getElementById('subText').value || '').trim();
+  if (!title && !sub) return;
+  const pad = Math.round(w * 0.06);
+  c.textBaseline = 'alphabetic';
+  if (sub) {
+    c.font = '500 ' + Math.round(w * 0.0155) + 'px -apple-system, Helvetica, sans-serif';
+    c.fillStyle = 'rgba(255,255,255,0.72)';
+    c.fillText(sub, pad, h - pad);
+  }
+  if (title) {
+    const y = h - pad - (sub ? Math.round(w * 0.034) : 0);
+    c.font = '600 ' + Math.round(w * 0.052) + 'px -apple-system, Helvetica, sans-serif';
+    c.fillStyle = '#FFFFFF';
+    c.fillText(title, pad, y);
+    c.fillStyle = PALETTES[currentPalette][0];
+    c.fillRect(pad, y + Math.round(w * 0.012), Math.round(w * 0.09), Math.max(2, Math.round(w * 0.0035)));
+  }
+}
+
+/* ---------- output panel: every save is a real user click (Safari-safe) ---------- */
+const shots = [];
+
+function u8FromDataUrl(url) {
+  const b = atob(url.split(',')[1]);
+  const u8 = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) u8[i] = b.charCodeAt(i);
+  return u8;
+}
+/* Read blob bytes once, up front, so the ZIP click never has to await. */
+function readBytes(blob, shot) {
+  const put = ab => { shot.bytes = new Uint8Array(ab); };
+  if (blob.arrayBuffer) { blob.arrayBuffer().then(put, () => {}); return; }
+  try {
+    const fr = new FileReader();
+    fr.onload = () => put(fr.result);
+    fr.readAsArrayBuffer(blob);
+  } catch (e) {}
+}
+
+function renderOut() {
+  const grid = document.getElementById('outGrid');
+  grid.innerHTML = '';
+  shots.forEach(s => {
+    const card = document.createElement('div'); card.className = 'out-card';
+    let media;
+    if (s.kind === 'video') {
+      media = document.createElement('video');
+      media.src = s.url; media.controls = true; media.muted = true;
+      media.loop = true; media.autoplay = true; media.playsInline = true;
+    } else {
+      media = document.createElement('img');
+      media.src = s.url; media.alt = s.name;
+    }
+    const meta = document.createElement('div'); meta.className = 'out-meta';
+    const nm = document.createElement('div'); nm.className = 'nm';
+    nm.textContent = s.kind === 'video'
+      ? ('影片 ' + (s.dur || '?') + 's · ' + s.w + '×' + s.h)
+      : (s.kind === 'anim' ? (s.note || (s.w + '×' + s.h)) : (s.w + '×' + s.h));
+    const btn = document.createElement('button');
+    btn.className = 'save'; btn.textContent = '保存';
+    btn.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = s.url; a.download = s.name; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => a.remove(), 1000);
+      showToast('Saving…');
+    });
+    meta.appendChild(nm); meta.appendChild(btn);
+    card.appendChild(media); card.appendChild(meta);
+    grid.appendChild(card);
+  });
+  const vids = shots.filter(s => s.kind === 'video').length;
+  const anim = shots.filter(s => s.kind === 'anim').length;
+  document.getElementById('outSub').textContent =
+    vids ? (vids + ' 段影片 · 點「保存」落盤') :
+    anim ? (anim + ' 個動畫檔 · 點「保存」落盤') :
+    (shots.length + ' 张 · 点「保存」落盘');
+  document.getElementById('outPanel').classList.add('show');
+}
+
+function clearShots() {
+  shots.forEach(s => { try { if (s.isBlob) URL.revokeObjectURL(s.url); } catch (e) {} });
+  shots.length = 0;
+}
+
+/* ---------- minimal store-only ZIP (no deps) ---------- */
+const CRC_T = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(u8) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function dosTime(d) { return ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF; }
+function dosDate(d) { return (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF; }
+function buildZip(files) {
+  const enc = new TextEncoder();
+  const local = [], central = [];
+  let offset = 0;
+  files.forEach(f => {
+    const nb = enc.encode(f.name), crc = crc32(f.data), n = f.data.length;
+    const lh = new Uint8Array(30), dv = new DataView(lh.buffer);
+    dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true);
+    dv.setUint16(6, 0x0800, true); dv.setUint16(8, 0, true);
+    dv.setUint16(10, dosTime(f.date), true); dv.setUint16(12, dosDate(f.date), true);
+    dv.setUint32(14, crc, true); dv.setUint32(18, n, true); dv.setUint32(22, n, true);
+    dv.setUint16(26, nb.length, true); dv.setUint16(28, 0, true);
+    local.push(lh, nb, f.data);
+
+    const ch = new Uint8Array(46), cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true); cv.setUint16(10, 0, true);
+    cv.setUint16(12, dosTime(f.date), true); cv.setUint16(14, dosDate(f.date), true);
+    cv.setUint32(16, crc, true); cv.setUint32(20, n, true); cv.setUint32(24, n, true);
+    cv.setUint16(28, nb.length, true); cv.setUint16(30, 0, true); cv.setUint16(32, 0, true);
+    cv.setUint16(34, 0, true); cv.setUint16(36, 0, true); cv.setUint32(38, 0, true);
+    cv.setUint32(42, offset, true);
+    central.push(ch, nb);
+
+    offset += 30 + nb.length + n;
+  });
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  const eo = new Uint8Array(22), ev = new DataView(eo.buffer);
+  ev.setUint32(0, 0x06054b50, true); ev.setUint16(4, 0, true); ev.setUint16(6, 0, true);
+  ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cdSize, true); ev.setUint32(16, offset, true); ev.setUint16(20, 0, true);
+  return new Blob(local.concat(central, [eo]), { type: 'application/zip' });
+}
+
+function finishExport(out, label, after) {
+  const w = out.width, h = out.height;
+  const c = out.getContext('2d');
+  const cx = w * 0.5, cy = h * 0.5, r = Math.max(w, h) * 0.78;
+  const vg = c.createRadialGradient(cx, cy, w * 0.16, cx, cy, r);
+  vg.addColorStop(0, 'rgba(16,14,15,0)');
+  vg.addColorStop(0.55, 'rgba(16,14,15,0.24)');
+  vg.addColorStop(1, 'rgba(16,14,15,0.88)');
+  c.fillStyle = vg; c.fillRect(0, 0, w, h);
+
+  const [wr, wg, wb] = hexToRgb(PALETTES[currentPalette][0]);
+  const wash = c.createRadialGradient(w * 0.5, 0, 0, w * 0.5, 0, w * 0.85);
+  wash.addColorStop(0, 'rgba(' + wr + ',' + wg + ',' + wb + ',0.14)');
+  wash.addColorStop(1, 'rgba(' + wr + ',' + wg + ',' + wb + ',0)');
+  c.globalCompositeOperation = 'lighter';
+  c.fillStyle = wash; c.fillRect(0, 0, w, h);
+  c.globalCompositeOperation = 'source-over';
+
+  drawOverlay(c, w, h);
+
+  const fname = 'crash-flow-' + currentPalette + '-' + currentMode + '-0x' + padHex(seed, 8) + '_' + stamp() + '.' + (stillFmt === 'jpg' ? 'jpg' : 'png');
+  const after_ = () => {
+    pushHistory();
+    if (label) showToast(label);
+    // Downloads fired from an async callback lose user-activation, and Safari
+    // turns them into navigations ("no app to open"). So we only stash the
+    // result here and let the user's own click in the output panel do the save.
+    if (after) setTimeout(after, 60);
+  };
+  const keep = (url, isBlob, bytes) => {
+    shots.push({ url: url, name: fname, w: w, h: h, isBlob: !!isBlob, bytes: bytes || null });
+    renderOut();
+    after_();
+  };
+  const mime = stillFmt === 'jpg' ? 'image/jpeg' : 'image/png';
+  const q = stillFmt === 'jpg' ? 0.92 : undefined;
+  const fallback = () => {
+    const url = out.toDataURL(mime, q);
+    keep(url, false, u8FromDataUrl(url));
+  };
+  if (out.toBlob) {
+    let fired = false;
+    try {
+      out.toBlob(blob => {
+        if (!blob) { if (!fired) { fired = true; fallback(); } return; }
+        fired = true;
+        const url = URL.createObjectURL(blob);
+        const shot = { url: url, name: fname, w: w, h: h, isBlob: true, bytes: null };
+        shots.push(shot);
+        // Pre-read the bytes now so the ZIP click stays synchronous (keeps
+        // user-activation intact for the download).
+        readBytes(blob, shot);
+        renderOut();
+        after_();
+      }, mime, q);
+    } catch (e) { fallback(); }
+  } else {
+    fallback();
+  }
+}
+
+function runExport(scale, done) {
+  if (exporting) return;
+  exporting = true;
+  const k = scale;
+  const w = Math.round(W * k), h = Math.round(H * k);
+  const out = document.createElement('canvas');
+  out.width = w; out.height = h;
+  const octx = out.getContext('2d');
+  octx.fillStyle = BASE_BG; octx.fillRect(0, 0, w, h);
+
+  const count = Math.min(Math.round(P.count * k * k), MAX_EXPORT_PARTICLES);
+  const arr = new Float32Array(count * 7);
+  const fx = FX * k, fy = FY * k;
+  const savedRng = rngState;
+  srand(seed);
+  seedParticles(arr, count, w, h, currentMode, fx, fy);
+  rngState = savedRng;
+
+  const fcs = foci.map(f => ({ x: f.x * k, y: f.y * k, s: f.s }));
+
+  let n = 0, t = 0;
+  showToast('Rendering 0%', true);
+  function chunk() {
+    for (let i = 0; i < 16 && n < EXPORT_FRAMES; i++, n++) {
+      t += DRIFT;
+      stepField(octx, w, h, arr, count, k, fx, fy, fcs, t);
+    }
+    if (n < EXPORT_FRAMES) {
+      showToast('Rendering ' + Math.round(n / EXPORT_FRAMES * 100) + '%', true);
+      requestAnimationFrame(chunk);
+    } else {
+      exporting = false;
+      finishExport(out, '已渲染 ' + w + '×' + h + ' · 輸出面板點「保存」', done);
+    }
+  }
+  requestAnimationFrame(chunk);
+}
+
+function doExport() {
+  if (exporting) { showToast('Rendering…'); return; }
+  clearShots();
+  runExport(exportScale);
+}
+
+function doBatch() {
+  if (exporting) { showToast('Rendering…'); return; }
+  clearShots();
+  let left = 5, total = 5;
+  const next = () => {
+    if (left <= 0) { showToast('Batch done · ' + total + ' 张'); return; }
+    showToast('Batch ' + (total - left + 1) + '/' + total + ' · rendering', true);
+    left--;
+    seed = (Math.random() * 0x100000000) >>> 0;
+    srand(seed); perlin = new Perlin(seed); initFoci();
+    seedParticles(particles, MAX_COUNT, W, H, currentMode, FX, FY);
+    syncUI();
+    runExport(exportScale, next);
+  };
+  next();
+}
+
+/* ==================== URL / seed / history ==================== */
+function writeURL() {
+  try {
+    const u = new URL(location.href);
+    u.hash = 'seed=' + padHex(seed, 8) + '&pal=' + currentPalette + '&mode=' + currentMode +
+      '&geo=' + [GEO.rings, GEO.arms, GEO.tight, GEO.petals, GEO.petals2, GEO.bands, GEO.cols, GEO.rows, GEO.spokeVar, GEO.jitter, GEO.twist].map(n => +n).join('-') +
+      (usingCustom ? '&cols=' + customCols.map(c => c.slice(1)).join('-') : '');
+    history.replaceState(null, '', u);
+  } catch (e) {}
+}
+function readURL() {
+  try {
+    const q = new URLSearchParams(location.hash.slice(1));
+    const s = q.get('seed');
+    if (s && /^[0-9a-fA-F]{1,8}$/.test(s)) seed = parseInt(s, 16) >>> 0;
+    const p = q.get('pal'); if (p && PALETTES[p]) currentPalette = p;
+    const m = q.get('mode'); if (m && MODES.indexOf(m) >= 0) currentMode = m;
+    const g = q.get('geo');
+    if (g) {
+      const a = g.split('-').map(Number);
+      if (a.length === 11 && a.every(x => Number.isFinite(x))) {
+        GEO = { rings: a[0]|0, arms: a[1]|0, tight: a[2],
+                petals: a[3]|0, petals2: a[4]|0,
+                bands: a[5]|0, cols: a[6]|0, rows: a[7]|0,
+                spokeVar: a[8], jitter: a[9], twist: a[10] };
+      }
+    }
+    const cs = q.get('cols');
+    if (cs) {
+      const arr = cs.split('-').filter(x => /^[0-9a-fA-F]{6}$/.test(x));
+      if (arr.length === 5) { customCols = arr.map(x => '#' + x.toUpperCase()); usingCustom = true; }
+    }
+  } catch (e) {}
+}
+function todaySeed() {
+  const d = new Date();
+  const n = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  // Math.imul, not `*`: n * 2654435761 blows past 2^53 for real dates and
+  // silently drops the low bits, which is exactly where the entropy lives.
+  return Math.imul(n, 2654435761) >>> 0;
+}
+function mix32(x) {
+  x = x >>> 0;
+  x = (x ^ (x >>> 16)) >>> 0;
+  x = Math.imul(x, 0x7feb352d) >>> 0;
+  x = (x ^ (x >>> 15)) >>> 0;
+  x = Math.imul(x, 0x846ca68b) >>> 0;
+  return (x ^ (x >>> 16)) >>> 0;
+}
+/* 今日一圖 has to be the SAME picture all day no matter what came before it —
+   including right after 隨機一切, which swaps palette and mode. So the whole
+   composition identity (seed + palette + mode) comes from the date, not just
+   the seed; otherwise the button only looked deterministic. */
+function todayPick() {
+  const d = new Date();
+  const n = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  const b = mix32(n ^ 0x9e3779b9), c = mix32(n + 0x85ebca6b);
+  return {
+    seed: todaySeed(),
+    pal: PALETTE_KEYS[b % PALETTE_KEYS.length],
+    mode: MODES[c % MODES.length]
+  };
+}
+const HIST_KEY = 'crashflow.history';
+function pushHistory() {
+  try {
+    let h = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+    h.unshift({ seed: padHex(seed, 8), pal: currentPalette, mode: currentMode, ts: Date.now() });
+    h = h.slice(0, 30);
+    localStorage.setItem(HIST_KEY, JSON.stringify(h));
+    renderHistory();
+  } catch (e) {}
+}
+function renderHistory() {
+  const sel = document.getElementById('history');
+  let h = [];
+  try { h = JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch (e) {}
+  sel.innerHTML = '<option value="">歷史存檔（最近 ' + h.length + ' 張）</option>' +
+    h.map((r, i) => '<option value="' + i + '">' + r.seed + ' · ' + r.pal + ' · ' + r.mode + '</option>').join('');
+}
+
+/* ==================== UI sync ==================== */
+function syncCustomInputs() {
+  const cols = activeColors();
+  for (let i = 0; i < 5; i++) {
+    const el = document.getElementById('c' + i);
+    if (el && cols[i]) el.value = cols[i].toLowerCase();
+  }
+}
+function syncUI() {
+  document.getElementById('seedInput').value = '0x' + padHex(seed, 8);
+  document.getElementById('pCount').textContent = P.count.toLocaleString();
+  const pi = usingCustom ? -1 : PALETTE_KEYS.indexOf(currentPalette);
+  document.querySelectorAll('#palettePanel .swatch').forEach((b, i) => b.classList.toggle('active', i === pi));
+  const mi = MODES.indexOf(currentMode);
+  document.querySelectorAll('#modePanel .mode').forEach((b, i) => b.classList.toggle('active', i === mi));
+  rebuildColors();
+  syncCustomInputs();
+  writeURL();
+}
+function recolor() { rebuildColors(); ctx.fillStyle = BASE_BG; ctx.fillRect(0, 0, W, H); syncUI(); }
+/* Rebuild the particle geometry for the new mode, but keep the seed/noise field
+   so the composition is still recognisably the same one. Restoring rngState
+   afterwards keeps the live loop's random stream untouched. */
+function reshape() {
+  const saved = rngState;
+  srand(seed); initFoci();
+  seedParticles(particles, MAX_COUNT, W, H, currentMode, FX, FY);
+  rngState = saved;
+  ctx.fillStyle = BASE_BG; ctx.fillRect(0, 0, W, H);
+  syncUI();
+}
+/* Random shape, but never the one already on screen — otherwise "random"
+   lands on the current mode often enough to feel broken. */
+function randomMode() {
+  const pool = MODES.filter(m => m !== currentMode);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/* ==================== Controls ==================== */
+function newComposition() {
+  ctx.fillStyle = BASE_BG; ctx.fillRect(0, 0, W, H);
+}
+
+/* ==================== Animation capture → GIF / PNG sequence ==================== */
+const ANIM_FRAMES = [60, 120, 240];
+const ANIM_WIDTHS = [480, 720, 1080];
+let animFrames = 120, animWidth = 720, capturing = false;
+
+const ANIM_FPS = 20;                       // playback rate of the exported clip
+const ANIM_STEPS = 3;                      // sim steps per output frame (~real-time)
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+
+/* Palette built from the actual colour blends this engine produces:
+   every pixel is some palette colour composited over the near-black ground,
+   so blending each colour toward BG (plus pair blends and a gray ramp) covers
+   the image far better than generic uniform quantisation. */
+function buildPal(cols) {
+  const p = [];
+  const add = (r, g, b) => { p.push(r < 0 ? 0 : r > 255 ? 255 : r | 0, g < 0 ? 0 : g > 255 ? 255 : g | 0, b < 0 ? 0 : b > 255 ? 255 : b | 0); };
+  const base = cols.map(hexToRgb), BG = [16, 14, 15];
+  for (let c = 0; c < base.length; c++)
+    for (let i = 0; i < 32; i++) {
+      const t = i / 31;
+      add(BG[0] + (base[c][0] - BG[0]) * t, BG[1] + (base[c][1] - BG[1]) * t, BG[2] + (base[c][2] - BG[2]) * t);
+    }
+  for (let a = 0; a < base.length; a++)
+    for (let b = a + 1; b < base.length; b++)
+      for (let i = 1; i <= 6; i++) {
+        const t = i / 7;
+        add(base[a][0] + (base[b][0] - base[a][0]) * t, base[a][1] + (base[b][1] - base[a][1]) * t, base[a][2] + (base[b][2] - base[a][2]) * t);
+      }
+  for (let i = 0; i < 32; i++) { const g = i / 31 * 255; add(g, g, g); }
+  while (p.length < 768) p.push(0);
+  p.length = 768;
+  const pal = new Uint8Array(p);
+  // 32^3 lookup cube → O(1) nearest-colour per pixel
+  const lut = new Uint8Array(32768);
+  for (let r = 0; r < 32; r++) for (let g = 0; g < 32; g++) for (let b = 0; b < 32; b++) {
+    const R = r * 8 + 4, G = g * 8 + 4, B = b * 8 + 4;
+    let best = 0, bd = Infinity;
+    for (let i = 0; i < 256; i++) {
+      const dr = pal[i * 3] - R, dg = pal[i * 3 + 1] - G, db = pal[i * 3 + 2] - B;
+      const d = dr * dr * 3 + dg * dg * 4 + db * db * 2;
+      if (d < bd) { bd = d; best = i; }
+    }
+    lut[(r << 10) | (g << 5) | b] = best;
+  }
+  return { pal: pal, lut: lut };
+}
+
+function frameToIndex(data, w, h, lut) {
+  const idx = new Uint8Array(w * h);
+  for (let y = 0, i = 0; y < h; y++) {
+    const bo = (y & 3) * 4;
+    for (let x = 0; x < w; x++, i++) {
+      const p = i * 4;
+      const off = (BAYER[bo + (x & 3)] / 16 - 0.47) * 10;
+      let r = data[p] + off, g = data[p + 1] + off, b = data[p + 2] + off;
+      if (r < 0) r = 0; else if (r > 255) r = 255;
+      if (g < 0) g = 0; else if (g > 255) g = 255;
+      if (b < 0) b = 0; else if (b > 255) b = 255;
+      idx[i] = lut[((r | 0) >> 3) << 10 | ((g | 0) >> 3) << 5 | ((b | 0) >> 3)];
+    }
+  }
+  return idx;
+}
+
+/* GIF LZW — variable width, MSB-first bit packing */
+function gifLZW(idx) {
+  const minCode = 8, clear = 256, eoi = 257;
+  let codeSize = 9, next = 258;
+  const dict = new Map(), out = [];
+  let cur = 0, bits = 0;
+  const emit = c => {
+    cur |= c << bits; bits += codeSize;
+    while (bits >= 8) { out.push(cur & 255); cur >>= 8; bits -= 8; }
+  };
+  emit(clear);
+  if (!idx.length) { emit(eoi); if (bits) out.push(cur & 255); return new Uint8Array(out); }
+  let prefix = idx[0];
+  for (let i = 1; i < idx.length; i++) {
+    const k = idx[i], key = prefix * 4096 + k;
+    const v = dict.get(key);
+    if (v !== undefined) { prefix = v; continue; }
+    emit(prefix);
+    if (next === 4096) {
+      emit(clear); dict.clear(); next = 258; codeSize = 9;
+    } else {
+      if (next >= (1 << codeSize)) codeSize++;
+      dict.set(key, next++);
+    }
+    prefix = k;
+  }
+  emit(prefix); emit(eoi);
+  if (bits > 0) out.push(cur & 255);
+  return new Uint8Array(out);
+}
+
+function gifBytes(frames, w, h, pal, delayCs) {
+  const parts = [];
+  const ascii = s => { const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i) & 255; return a; };
+  parts.push(ascii('GIF89a'));
+  const lsd = new Uint8Array(7);
+  lsd[0] = w & 255; lsd[1] = (w >> 8) & 255; lsd[2] = h & 255; lsd[3] = (h >> 8) & 255;
+  lsd[4] = 0xF7; lsd[5] = 0; lsd[6] = 0;
+  parts.push(lsd, pal);
+  const app = new Uint8Array(19);
+  app[0] = 0x21; app[1] = 0xFF; app[2] = 11;
+  const ns = 'NETSCAPE2.0';
+  for (let i = 0; i < 11; i++) app[3 + i] = ns.charCodeAt(i);
+  app[14] = 3; app[15] = 1; app[16] = 0; app[17] = 0; app[18] = 0;   // loop forever
+  parts.push(app);
+  for (let fi = 0; fi < frames.length; fi++) {
+    const gce = new Uint8Array(8);
+    gce[0] = 0x21; gce[1] = 0xF9; gce[2] = 4; gce[3] = 0x04;
+    gce[4] = delayCs & 255; gce[5] = (delayCs >> 8) & 255; gce[6] = 0; gce[7] = 0;
+    parts.push(gce);
+    const id = new Uint8Array(10);
+    id[0] = 0x2C; id[5] = w & 255; id[6] = (w >> 8) & 255; id[7] = h & 255; id[8] = (h >> 8) & 255;
+    parts.push(id, new Uint8Array([8]));
+    const f = frames[fi];
+    for (let p = 0; p < f.length;) {
+      const n = Math.min(255, f.length - p);
+      parts.push(new Uint8Array([n]), f.subarray(p, p + n));
+      p += n;
+    }
+    parts.push(new Uint8Array([0]));
+  }
+  parts.push(new Uint8Array([0x3B]));
+  return new Blob(parts, { type: 'image/gif' });
+}
+
+function vignetteOn(c, w, h) {
+  const g = c.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.15, w * 0.5, h * 0.5, Math.max(w, h) * 0.78);
+  g.addColorStop(0, 'rgba(16,14,15,0)');
+  g.addColorStop(0.55, 'rgba(16,14,15,0.24)');
+  g.addColorStop(1, 'rgba(16,14,15,0.88)');
+  c.fillStyle = g; c.fillRect(0, 0, w, h);
+}
+
+/* Yield to the browser, but never stall: rAF doesn't fire in a background tab,
+   which would freeze a 240-frame capture the moment you switch away. */
+function raf() {
+  return new Promise(r => {
+    let done = false;
+    const go = () => { if (!done) { done = true; r(); } };
+    try { requestAnimationFrame(go); } catch (e) {}
+    setTimeout(go, 50);
+  });
+}
+function canvasPngBytes(cv) {
+  return new Promise(res => {
+    if (cv.toBlob) {
+      try {
+        cv.toBlob(b => {
+          if (!b) { res(u8FromDataUrl(cv.toDataURL('image/png'))); return; }
+          if (b.arrayBuffer) { b.arrayBuffer().then(ab => res(new Uint8Array(ab)), () => res(null)); return; }
+          try { const fr = new FileReader(); fr.onload = () => res(new Uint8Array(fr.result)); fr.onerror = () => res(null); fr.readAsArrayBuffer(b); }
+          catch (e) { res(null); }
+        }, 'image/png');
+        return;
+      } catch (e) {}
+    }
+    res(u8FromDataUrl(cv.toDataURL('image/png')));
+  });
+}
+
+async function runCapture(kind) {
+  if (capturing || exporting || recording) { showToast('忙碌中…'); return; }
+  capturing = true;
+  const cw = animWidth, ch = Math.max(2, Math.round(animWidth * H / W));
+  const out = document.createElement('canvas');
+  out.width = cw; out.height = ch;
+  const octx = out.getContext('2d');
+  octx.fillStyle = BASE_BG; octx.fillRect(0, 0, cw, ch);
+
+  const sc = cw / W;
+  const count = Math.min(Math.round(P.count * sc * sc), MAX_EXPORT_PARTICLES);
+  const arr = new Float32Array(count * 7);
+  const fx = FX * sc, fy = FY * sc;
+  const savedRng = rngState; srand(seed); seedParticles(arr, count, cw, ch, currentMode, fx, fy); rngState = savedRng;
+  const fcs = foci.map(f => ({ x: f.x * sc, y: f.y * sc, s: f.s }));
+
+  const P_ = buildPal(activeColors());
+  const gifFrames = [], seqFrames = [];
+  let t = 0, f = 0;
+
+  try {
+    while (f < animFrames) {
+      for (let s = 0; s < ANIM_STEPS; s++) { t += DRIFT; stepField(octx, cw, ch, arr, count, sc, fx, fy, fcs, t); }
+      vignetteOn(octx, cw, ch);
+      f++;
+      if (kind === 'gif') {
+        const d = octx.getImageData(0, 0, cw, ch).data;
+        gifFrames.push(gifLZW(frameToIndex(d, cw, ch, P_.lut)));
+      } else {
+        const b = await canvasPngBytes(out);
+        if (b) seqFrames.push(b);
+      }
+      if (f % 5 === 0 || f === animFrames) showToast('捕捉 ' + Math.round(f / animFrames * 100) + '%', true);
+      await raf();
+    }
+  } catch (e) {
+    capturing = false; showToast('捕捉失敗：' + (e.message || e)); return;
+  }
+  capturing = false;
+
+  const tag = currentPalette + '-' + currentMode + '-0x' + padHex(seed, 8) + '_' + stamp();
+  if (kind === 'gif') {
+    const blob = gifBytes(gifFrames, cw, ch, P_.pal, Math.max(2, Math.round(100 / ANIM_FPS)));
+    addShotBlob(blob, 'crash-flow-' + tag + '.gif', cw, ch, 'anim',
+      animFrames + ' 幀 · ' + ANIM_FPS + 'fps · ' + Math.round(blob.size / 1024) + 'KB');
+    showToast('GIF 完成 · ' + Math.round(blob.size / 1024) + 'KB');
+  } else {
+    const files = seqFrames.map((b, i) => ({
+      name: 'frame_' + String(i + 1).padStart(3, '0') + '.png', data: b, date: new Date()
+    }));
+    const zip = buildZip(files);
+    addShotBlob(zip, 'crash-flow-' + tag + '-' + files.length + 'frames.zip', cw, ch, 'anim',
+      files.length + ' 張 PNG · ' + Math.round(zip.size / 1024) + 'KB');
+    showToast('PNG 序列完成 · ' + files.length + ' 張');
+  }
+}
+
+/* shared: stash a finished blob in the output panel */
+function addShotBlob(blob, name, w, h, kind, note) {
+  clearShots();
+  const shot = { url: URL.createObjectURL(blob), name: name, w: w, h: h, isBlob: true, bytes: null, kind: kind, note: note };
+  shots.push(shot);
+  readBytes(blob, shot);
+  renderOut();
+  pushHistory();
+}
+
+/* ==================== Video recording (the flowing process) ==================== */
+const REC_DURS = [5, 10, 20];
+let recDur = 10, recording = false, recObj = null, recTimer = null;
+
+function pickMime() {
+  const list = [
+    'video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=h264', 'video/mp4',
+    'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'
+  ];
+  if (!w_MR() || !w_MR().isTypeSupported) return '';
+  for (let i = 0; i < list.length; i++) {
+    try { if (w_MR().isTypeSupported(list[i])) return list[i]; } catch (e) {}
+  }
+  return '';
+}
+function w_MR() { return (typeof MediaRecorder !== 'undefined') ? MediaRecorder : null; }
+
+function stopRecording() {
+  if (!recording) return;
+  if (recTimer) { clearInterval(recTimer); recTimer = null; }
+  try { if (recObj && recObj.state !== 'inactive') recObj.stop(); } catch (e) {}
+}
+
+function startRecording() {
+  if (recording) { stopRecording(); return; }
+  const cv = document.getElementById('stage');
+  if (!w_MR() || !cv.captureStream) { showToast('此瀏覽器不支援錄影（Safari 14.1+ 可用）'); return; }
+
+  let stream;
+  try { stream = cv.captureStream(60); } catch (e) { showToast('錄影失敗：' + e.message); return; }
+
+  const mime = pickMime();
+  const opts = { videoBitsPerSecond: 16000000 };
+  if (mime) opts.mimeType = mime;
+  let rec;
+  try { rec = new MediaRecorder(stream, opts); }
+  catch (e) { try { rec = new MediaRecorder(stream); } catch (e2) { showToast('錄影失敗：' + e2.message); return; } }
+
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = () => {
+    recording = false; recObj = null;
+    if (recTimer) { clearInterval(recTimer); recTimer = null; }
+    try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    const btn = document.getElementById('record');
+    if (btn) btn.textContent = '錄製';
+    if (!chunks.length) { showToast('沒有錄到內容'); return; }
+    const type = rec.mimeType || mime || 'video/webm';
+    const blob = new Blob(chunks, { type: type });
+    const ext = /mp4/i.test(type) ? 'mp4' : 'webm';
+    clearShots();
+    const name = 'crash-flow-' + currentPalette + '-' + currentMode + '-0x' + padHex(seed, 8) +
+                 '_' + recDur + 's_' + stamp() + '.' + ext;
+    const shot = {
+      url: URL.createObjectURL(blob), name: name, w: cv.width, h: cv.height,
+      isBlob: true, bytes: null, kind: 'video', dur: recDur
+    };
+    shots.push(shot);
+    readBytes(blob, shot);
+    renderOut();
+    pushHistory();
+    showToast('錄影完成 · ' + recDur + 's');
+  };
+
+  recObj = rec;
+  // start from a clean frame so the video builds up from black
+  newComposition();
+  try { rec.start(200); } catch (e) { showToast('錄影失敗：' + e.message); return; }
+  recording = true;
+  const btn = document.getElementById('record');
+  if (btn) btn.textContent = '停止';
+
+  let left = recDur;
+  showToast('錄影 ' + left + 's', true);
+  recTimer = setInterval(() => {
+    left--;
+    if (left > 0) { showToast('錄影 ' + left + 's', true); return; }
+    if (recTimer) { clearInterval(recTimer); recTimer = null; }
+    try { if (rec.state !== 'inactive') rec.stop(); } catch (e) {}
+  }, 1000);
+}
+
+/* ==================== Output panel controls ==================== */
+function closeOut() { document.getElementById('outPanel').classList.remove('show'); }
+document.getElementById('outClose').addEventListener('click', closeOut);
+document.getElementById('outPanel').addEventListener('click', e => {
+  if (e.target.id === 'outPanel') closeOut();
+});
+document.getElementById('outZip').addEventListener('click', () => {
+  const btn = document.getElementById('outZip');
+  const imgs = shots.filter(s => s.kind !== 'video' && s.kind !== 'anim');
+  if (!imgs.length) { showToast('動畫／影片已是單檔，直接點「保存」'); return; }
+  const missing = imgs.filter(s => !s.bytes).length;
+  if (missing) { showToast('仍在讀取 ' + missing + ' 張，稍等一下'); return; }
+  try {
+    const files = imgs.map(s => ({ name: s.name, data: s.bytes, date: new Date() }));
+    const zip = buildZip(files);              // sync — keeps user-activation alive
+    const url = URL.createObjectURL(zip);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'crash-flow-' + currentPalette + '-' + currentMode + '-0x' + padHex(seed, 8) +
+                 '-' + files.length + '张.zip';
+    a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 8000);
+    showToast('ZIP · ' + files.length + ' 张');
+  } catch (err) {
+    showToast('ZIP 失敗：' + (err.message || err));
+  }
+  btn.blur();
+});
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.closest('#regen')) {
+    seed = (Math.random() * 0x100000000) >>> 0;
+    initAll(); newComposition(); syncUI();
+    showToast('New seed · 0x' + padHex(seed, 8)); return;
+  }
+  if (t.closest('#export')) { doExport(); return; }
+  if (t.closest('#batch')) { doBatch(); return; }
+  if (t.closest('#today')) {
+    const p = todayPick();
+    seed = p.seed; currentPalette = p.pal; currentMode = p.mode;
+    usingCustom = false;              // 隨機一切 leaves this set — must clear
+    resetDefaults();                  // lock the four sliders back to defaults
+    initAll(); newComposition(); syncUI();
+    showToast('今日一圖 · 0x' + padHex(seed, 8)); return;
+  }
+  if (t.closest('#copyLink')) {
+    writeURL();
+    const url = location.href;
+    const ok = () => showToast('Link copied');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(ok, () => { prompt('Copy this link:', url); });
+    } else { prompt('Copy this link:', url); }
+    return;
+  }
+  if (t.closest('#randMode')) {
+    currentMode = randomMode();
+    randomGeo();                       // generate a variant of this family
+    reshape(); syncUI();
+    showToast('隨機形狀 · ' + currentMode + ' · ' + describeGeo()); return;
+  }
+  if (t.closest('#randPal')) {
+    randomPalette(); recolor(); showToast('隨機配色'); return;
+  }
+  if (t.closest('#randAll')) {
+    seed = (Math.random() * 0x100000000) >>> 0;
+    currentMode = randomMode();
+    randomGeo();
+    randomPalette();
+    P.turns = +(0.7 + Math.random() * 3.0).toFixed(1);
+    P.speed = +(0.7 + Math.random() * 2.0).toFixed(1);
+    const tEl = document.getElementById('sTurns'); if (tEl) tEl.value = P.turns;
+    const sEl = document.getElementById('sSpeed'); if (sEl) sEl.value = P.speed;
+    initAll(); newComposition(); syncUI();
+    showToast('隨機一切 · ' + currentMode + ' · ' + describeGeo()); return;
+  }
+  if (t.closest('#resetCustom')) {
+    usingCustom = false; recolor(); showToast('用回預設配色'); return;
+  }
+  if (t.closest('#record')) { startRecording(); return; }
+  if (t.closest('#qExport')) { doExport(); return; }
+  if (t.closest('#qGif')) { runCapture('gif'); return; }
+  if (t.closest('#qSeq')) { runCapture('seq'); return; }
+  if (t.closest('#qRec')) { startRecording(); return; }
+  if (t.closest('#makeGif')) { runCapture('gif'); return; }
+  if (t.closest('#makeSeq')) { runCapture('seq'); return; }
+  const btn = t.closest('button');
+  if (!btn) return;
+  const idxIn = panel => { const bs = panel.querySelectorAll('button'); let i = -1; bs.forEach((b, j) => { if (b === btn || b.contains(btn)) i = j; }); return i; };
+  const mp = btn.closest('#modePanel');
+  if (mp) { const i = idxIn(mp); if (i >= 0 && MODES[i]) { currentMode = MODES[i]; presetGeo(); reshape(); syncUI(); showToast('形狀 · ' + btn.textContent.trim() + ' [' + currentMode + ']'); } return; }
+  const pp = btn.closest('#palettePanel');
+  if (pp) { const i = idxIn(pp); if (i >= 0 && PALETTE_KEYS[i]) {
+    // Picking a preset must clear the custom flag, otherwise a previous
+    // "隨機配色" keeps overriding it and the swatch looks dead.
+    usingCustom = false;
+    currentPalette = PALETTE_KEYS[i]; recolor(); showToast('配色 · ' + btn.textContent.trim() + ' [' + currentPalette + ']'); } return; }
+  // index-based, NOT data-* : the preview layer strips data attributes.
+  const sp = btn.closest('#sizePanel');
+  if (sp) {
+    const i = idxIn(sp);
+    if (i >= 0 && [1, 2, 4][i]) {
+      exportScale = [1, 2, 4][i];
+      sp.querySelectorAll('button').forEach((b, j) => b.classList.toggle('active', j === i));
+      showToast('Export ' + exportScale + '×');
+    }
+    return;
+  }
+  const rp = btn.closest('#recPanel');
+  if (rp) {
+    const i = idxIn(rp);
+    if (i >= 0 && REC_DURS[i]) {
+      recDur = REC_DURS[i];
+      rp.querySelectorAll('button').forEach((b, j) => b.classList.toggle('active', j === i));
+      showToast('錄影 ' + recDur + 's');
+    }
+    return;
+  }
+  const fp = btn.closest('#animFPanel');
+  if (fp) {
+    const i = idxIn(fp);
+    if (i >= 0 && ANIM_FRAMES[i]) {
+      animFrames = ANIM_FRAMES[i];
+      fp.querySelectorAll('button').forEach((b, j) => b.classList.toggle('active', j === i));
+      showToast('動畫 ' + animFrames + ' 幀');
+    }
+    return;
+  }
+  const wp = btn.closest('#animWPanel');
+  if (wp) {
+    const i = idxIn(wp);
+    if (i >= 0 && ANIM_WIDTHS[i]) {
+      animWidth = ANIM_WIDTHS[i];
+      wp.querySelectorAll('button').forEach((b, j) => b.classList.toggle('active', j === i));
+      showToast('寬 ' + animWidth + 'px');
+    }
+    return;
+  }
+  const gp = btn.closest('#fmtPanel');
+  if (gp) {
+    const i = idxIn(gp);
+    if (i >= 0 && ['png', 'jpg'][i]) {
+      stillFmt = ['png', 'jpg'][i];
+      gp.querySelectorAll('button').forEach((b, j) => b.classList.toggle('active', j === i));
+      showToast('靜態格式 · ' + stillFmt.toUpperCase());
+    }
+    return;
+  }
+});
+
+document.getElementById('seedInput').addEventListener('change', e => {
+  const v = e.target.value.trim().replace(/^0x/i, '');
+  if (/^[0-9a-fA-F]{1,8}$/.test(v)) {
+    seed = parseInt(v, 16) >>> 0; initAll(); newComposition(); syncUI();
+    showToast('Seed · 0x' + padHex(seed, 8));
+  } else { syncUI(); showToast('Invalid seed'); }
+});
+
+document.getElementById('history').addEventListener('change', e => {
+  const i = parseInt(e.target.value, 10);
+  if (isNaN(i)) return;
+  let h = []; try { h = JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch (er) {}
+  const r = h[i]; if (!r) return;
+  seed = parseInt(r.seed, 16) >>> 0; currentPalette = r.pal; currentMode = r.mode;
+  initAll(); newComposition(); syncUI();
+  showToast('Restored · ' + r.seed);
+});
+
+/* ==================== Custom colour pickers ==================== */
+for (let i = 0; i < 5; i++) {
+  (function (idx) {
+    const el = document.getElementById('c' + idx);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      customCols = activeColors().slice();
+      customCols[idx] = el.value.toUpperCase();
+      usingCustom = true;
+      recolor();
+      showToast('自訂色 ' + (idx + 1) + ' · ' + customCols[idx]);
+    });
+  })(i);
+}
+
+function bindSlider(id, key) {
+  const el = document.getElementById(id);
+  el.value = P[key];
+  el.addEventListener('input', () => {
+    P[key] = parseFloat(el.value);
+    if (key === 'count') { P.count = Math.round(P.count); document.getElementById('pCount').textContent = P.count.toLocaleString(); }
+    if (key === 'fade') newComposition();
+  });
+}
+bindSlider('sTurns', 'turns'); bindSlider('sSpeed', 'speed');
+bindSlider('sFade', 'fade'); bindSlider('sCount', 'count');
+
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'Escape') { closeOut(); return; }
+  if (document.getElementById('outPanel').classList.contains('show')) return;
+  if (e.code === 'Space') { e.preventDefault(); document.getElementById('regen').click(); }
+  else if (e.key === 's' || e.key === 'S') doExport();
+  else if (e.key === 'h' || e.key === 'H') document.getElementById('ui').classList.toggle('hidden');
+});
+
+window.addEventListener('error', e => { showToast('ERR: ' + (e.message || 'script')); console.error(e.error || e); });
+
+/* ==================== Boot ==================== */
+window.addEventListener('resize', resize);
+readURL();
+resize();
+syncUI();
+renderHistory();
+initAll();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
