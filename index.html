@@ -31,7 +31,7 @@
   </script>
   <title>李鍵宇 / Rain Li · 个人主页</title>
   <meta name="description" content="李鍵宇（Rain Li）——零予控股 CEO / KTSA 创始人。用 AI 与营销，把分散的资源连成自我造血的创业生态。" />
-  <link rel="stylesheet" href="assets/style.css?v=20260865" />
+  <link rel="stylesheet" href="assets/style.css?v=20260866" />
   <link rel="stylesheet" href="assets/templates.css?v=20260845" />
 </head>
 <body>
@@ -64,6 +64,26 @@
     <button id="etReset" type="button">恢复默认</button>
   </div>
   <input type="file" id="etFile" accept="application/json,.json" hidden />
+
+  <!-- 临时校准条：100px 基准的实际渲染宽度，用于对齐微信与浏览器的缩放。校准后会移除。 -->
+  <div id="calib" style="position:fixed;left:8px;bottom:8px;z-index:9999;background:#000;color:#0f0;font:12px/1.4 monospace;padding:5px 8px;border-radius:6px">
+    <div id="calibBar" style="width:100px;height:6px;background:#0f0"></div>
+    <div id="calibTxt">…</div>
+  </div>
+  <script>
+    (function () {
+      function upd() {
+        var bar = document.getElementById('calibBar');
+        var txt = document.getElementById('calibTxt');
+        if (!bar || !txt) return;
+        var w = bar.getBoundingClientRect().width;
+        txt.textContent = 'W=' + w.toFixed(1) + '  zoom=' + (document.body.style.zoom || '1');
+      }
+      upd();
+      document.addEventListener('DOMContentLoaded', upd);
+      window.addEventListener('resize', upd);
+    })();
+  </script>
 
   <script src="assets/data.js?v=20260832"></script>
   <script src="assets/app.js?v=20260845"></script>
