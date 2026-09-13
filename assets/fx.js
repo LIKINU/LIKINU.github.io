@@ -194,9 +194,9 @@
     var img = document.createElement("img");
     img.src = "assets/linkyou-logo.png?v=20260830";
     img.alt = "LinkYou";
-    img.style.cssText = "height:28px;width:auto;display:block;border-radius:8px;padding:3px 4px";
+    img.style.cssText = "height:24px;width:auto;display:block;border-radius:7px;padding:2px 3px";
     dot.innerHTML = "";
-    dot.style.cssText = "width:auto;height:32px;background:transparent;padding:0;display:flex;align-items:center";
+    dot.style.cssText = "width:auto;height:28px;background:transparent;padding:0;display:flex;align-items:center";
     dot.appendChild(img);
   }
 

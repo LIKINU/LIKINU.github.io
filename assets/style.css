@@ -46,25 +46,26 @@ a { color: inherit; text-decoration: none; }
 .nav-links a:hover { color: var(--text); background: var(--bg-soft); }
 .theme-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 15px; display: grid; place-items: center; transition: .2s; margin-left: 8px; }
 .theme-btn:hover { background: var(--bg-soft); }
+/* 暗色(星空)模式：导航 logo 与跑马灯 logo 统一变纯白（复用干净原图+滤镜，避免 dark 抠图版白边） */
+[data-theme="dark"] .brand .dot img,
+[data-theme="dark"] .mq-logo { filter: brightness(0) invert(1); }
+
 /* 桌面端：隐藏汉堡按钮（旧逻辑残留，保持无害） */
 .nav-toggle { display: none; }
 
-/* 手机端：导航作为单行横向滚动条，保持在一行内，不折行 */
+/* 手机端：导航单行平铺（不滑动），所有项放进一行 */
 @media (max-width: 900px) {
-  .nav-inner { height: 80px; flex-wrap: nowrap; gap: 22px; padding: 0 8px 0 14px; }
+  .nav-inner { height: 80px; flex-wrap: nowrap; gap: 10px; padding: 0 6px 0 10px; }
   .brand { flex: 0 0 auto; white-space: nowrap; }
-  .brand .dot { width: 34px; height: 34px; font-size: 16px; border-radius: 9px; }
-  .brand span:last-child { font-size: 19px; }
+  .brand span:last-child { font-size: 17px; }
   .nav-links {
-    position: static; flex: 1 1 auto; flex-direction: row; flex-wrap: nowrap; gap: 6px;
-    min-width: 0; max-height: none; overflow-x: auto; overflow-y: hidden;
+    position: static; flex: 1 1 auto; flex-direction: row; flex-wrap: nowrap; gap: 3px;
+    min-width: 0; max-height: none; overflow: visible;
     background: none; border: none; box-shadow: none; padding: 0;
-    /* 不用 justify-content:flex-end —— 它配合 overflow-x:auto 时，
-       溢出内容会向左溢出压到品牌名上且滚不到（经典 flex 陷阱）。
-       改用首个子项的 margin-left:auto 推右：空间够则靠右，不够则自动为 0，正常滚动不重叠。 */
+    /* 不用 justify-content:flex-end —— 它配合溢出时会向左压到品牌名上（经典 flex 陷阱）。
+       改用首个子项的 margin-left:auto 推右：空间够则靠右，不够则自动为 0。 */
     justify-content: flex-start;
     scrollbar-width: none; -ms-overflow-style: none;
-    -webkit-overflow-scrolling: touch;
   }
   .nav-links > :first-child { margin-left: auto; }
   .nav-links::-webkit-scrollbar { display: none; }
@@ -73,12 +74,18 @@ a { color: inherit; text-decoration: none; }
     flex: 0 0 auto;
     display: inline-flex; align-items: center; justify-content: center;
     width: auto; text-align: center;
-    padding: 10px 15px; border-radius: 999px;
+    padding: 6px 9px; border-radius: 999px;
     border: 1px solid var(--border-light); background: var(--bg-soft);
-    font-size: 15px; font-weight: 600; margin-left: 0;
+    font-size: 14px; font-weight: 600; margin-left: 0;
   }
   .nav-links a:hover { background: var(--blue-light); color: var(--blue); }
-  .nav-links .theme-btn { border: 1px solid var(--border-light); background: var(--bg-soft); width: 42px; height: 42px; padding: 0; }
+  .nav-links .theme-btn { border: 1px solid var(--border-light); background: var(--bg-soft); width: 34px; height: 34px; padding: 0; }
+}
+
+/* 超窄屏（<355px）实在放不下时才允许横向滑动兜底 */
+@media (max-width: 355px) {
+  .nav-links { overflow-x: auto; }
+  .nav-links > :first-child { margin-left: 0; }
 }
 
 /* ---------- Hero ---------- */
