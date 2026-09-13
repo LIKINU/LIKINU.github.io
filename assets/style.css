@@ -24,7 +24,9 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+/* 锁定字体缩放：微信(X5/XWEB)、部分安卓浏览器会按 App「字体大小」设置自动缩放网页文字，
+   导致微信内字体比 Safari 小、整页被压缩。100% = 严格按 CSS 定义渲染，两端一致。 */
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   font-family: var(--font); background: var(--bg); color: var(--text);
   line-height: 1.7; -webkit-font-smoothing: antialiased; overflow-x: hidden;
