@@ -463,7 +463,7 @@
     localStorage.setItem("rainli-theme", theme);
     /* 导航 logo 跟随主题：暗色用「黑→白、蓝色保留」版，亮色用原版 */
     const bi = document.querySelector(".brand .dot img");
-    if (bi) bi.src = theme === "dark" ? "assets/linkyou-logo-white.png?v=20260833" : "assets/linkyou-logo.png?v=20260830";
+    if (bi) bi.src = theme === "dark" ? "assets/linkyou-logo-white-v2.png" : "assets/linkyou-logo.png?v=20260830";
     const btn = document.getElementById("themeBtn");
     if (btn) btn.innerHTML = svg(theme === "dark" ? "sun" : "moon");
   }
