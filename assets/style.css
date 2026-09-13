@@ -14,7 +14,7 @@
   --purple: #7c5cff;
   --radius: 14px;
   --radius-lg: 18px;
-  --maxw: 1080px;
+  --maxw: 1240px;
   --font: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
 }
 [data-theme="dark"] {
