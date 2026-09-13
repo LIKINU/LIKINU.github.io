@@ -36,11 +36,11 @@ a { color: inherit; text-decoration: none; }
 
 /* ---------- 导航 ---------- */
 .nav { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-light); }
-.nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; }
 .brand .dot { width: 32px; height: 32px; border-radius: 9px; background: var(--blue); display: grid; place-items: center; color: #fff; font-size: 15px; font-weight: 800; }
 .nav-links { display: flex; align-items: center; gap: 4px; }
-.nav-links a { color: var(--text-dim); font-size: 15px; font-weight: 600; padding: 8px 14px; border-radius: 8px; transition: .2s; }
+.nav-links a { color: var(--text-dim); font-size: 15px; font-weight: 600; padding: 10px 16px; border-radius: 8px; transition: .2s; }
 .nav-links a:hover { color: var(--text); background: var(--bg-soft); }
 .theme-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 15px; display: grid; place-items: center; transition: .2s; margin-left: 8px; }
 .theme-btn:hover { background: var(--bg-soft); }
