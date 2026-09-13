@@ -12,9 +12,26 @@
        锁死后白天版与暗色版一致，底图始终精确居中。不影响滚动与点击。 */
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
   </script>
+  <script>
+    /* 字号校准：微信内由微信自行缩放（已是满意的小字号观感），
+       手机浏览器没有这层缩放、字显得偏大，这里把整页缩到 92% 对齐微信观感。
+       仅手机端(<=900px)且非微信环境生效；调整 BROWSER_SCALE 即可改变大小。 */
+    (function () {
+      var BROWSER_SCALE = 0.92;
+      function applyScale() {
+        if (!document.body) return;               // 脚本在 head，body 可能尚未解析
+        var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+        var isPhone = window.innerWidth <= 900;
+        document.body.style.zoom = (!isWeChat && isPhone) ? BROWSER_SCALE : '';
+      }
+      applyScale();
+      document.addEventListener('DOMContentLoaded', applyScale);
+      window.addEventListener('resize', applyScale);
+    })();
+  </script>
   <title>李鍵宇 / Rain Li · 个人主页</title>
   <meta name="description" content="李鍵宇（Rain Li）——零予控股 CEO / KTSA 创始人。用 AI 与营销，把分散的资源连成自我造血的创业生态。" />
-  <link rel="stylesheet" href="assets/style.css?v=20260863" />
+  <link rel="stylesheet" href="assets/style.css?v=20260864" />
   <link rel="stylesheet" href="assets/templates.css?v=20260845" />
 </head>
 <body>
