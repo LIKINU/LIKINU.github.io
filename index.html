@@ -13,20 +13,15 @@
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
   </script>
   <script>
-    /* 字号校准：微信内由微信自行缩放（已是满意的小字号观感），
-       手机浏览器没有这层缩放、字显得偏大，这里把整页缩到 92% 对齐微信观感。
-       仅手机端(<=900px)且非微信环境生效；调整 BROWSER_SCALE 即可改变大小。 */
+    /* 字号校准：微信内由微信自行缩放；手机浏览器用 viewport initial-scale 整页缩放。
+       不用 body.zoom —— zoom 会把 100vw 元素（如跑马灯条）也缩掉，右侧露出一截空白。
+       调整 BROWSER_SCALE 即可改变浏览器端大小。 */
     (function () {
       var BROWSER_SCALE = 0.85;
-      function applyScale() {
-        if (!document.body) return;               // 脚本在 head，body 可能尚未解析
-        var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-        var isPhone = window.innerWidth <= 900;
-        document.body.style.zoom = (!isWeChat && isPhone) ? BROWSER_SCALE : '';
-      }
-      applyScale();
-      document.addEventListener('DOMContentLoaded', applyScale);
-      window.addEventListener('resize', applyScale);
+      var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      if (isWeChat || window.innerWidth > 900) return;
+      var m = document.querySelector('meta[name="viewport"]');
+      if (m) m.setAttribute('content', 'width=device-width, initial-scale=' + BROWSER_SCALE + ', maximum-scale=' + BROWSER_SCALE + ', user-scalable=no');
     })();
   </script>
   <title>李鍵宇 / Rain Li · 个人主页</title>
@@ -37,7 +32,7 @@
 <body>
   <div class="linkyou-watermark" aria-hidden="true">
     <img class="wm-light" src="assets/linkyou-logo.png?v=20260831" alt="" />
-    <img class="wm-dark" src="assets/linkyou-logo.png?v=20260832" alt="" />
+    <img class="wm-dark" src="assets/linkyou-logo-white.png?v=20260832" alt="" />
   </div>
   <header class="nav">
     <div class="wrap nav-inner">
