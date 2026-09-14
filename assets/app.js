@@ -284,7 +284,7 @@
       if (r.repo) links.push('<a class="gh-link" href="' + r.repo + '" target="_blank" rel="noopener noreferrer">' + svg("github") + '<span data-edit="gh.' + r.name + '.repoText">' + tx("gh." + r.name + ".repoText", "查看仓库") + '</span></a>');
       if (r.demo) links.push('<a class="gh-link gh-link--demo" href="' + r.demo + '" target="_blank" rel="noopener noreferrer">' + svg("external") + '<span data-edit="gh.' + r.name + '.demoText">' + tx("gh." + r.name + ".demoText", "在线演示") + '</span></a>');
       return (
-        '<article class="gh-card reveal" style="--c:' + r.accent + '">' +
+        '<article class="gh-card reveal" data-gh="' + r.name + '" style="--c:' + r.accent + '">' +
           '<div class="gh-top">' +
             '<div class="gh-icon">' + svg(r.icon || "github") + '</div>' +
             '<div class="gh-titles">' +
@@ -293,7 +293,9 @@
             '</div>' +
           '</div>' +
           '<p class="gh-desc" data-edit="gh.' + r.name + '.desc">' + tx("gh." + r.name + ".desc", r.desc) + '</p>' +
-          '<div class="gh-links">' + links.join("") + '</div>' +
+          '<div class="gh-links">' + links.join("") +
+            '<a class="gh-go" href="#/gh/' + encodeURIComponent(r.name) + '">完整介绍' + svg("arrow") + '</a>' +
+          '</div>' +
         '</article>'
       );
     }).join("");
@@ -453,13 +455,56 @@
     );
   }
 
+  /* ---------- GitHub 仓库详情页 ---------- */
+  function renderGhDetail(name) {
+    const list = (window.GITHUB && window.GITHUB.repos) || [];
+    const r = list.find(function (x) { return x.name === name; });
+    if (!r) return renderHome();
+    const feats = (r.points || []).map(function (h, i) {
+      return (
+        '<div class="feat reveal">' +
+          '<div class="feat-top"><div class="feat-icon" style="--c:' + r.accent + '">' + svg(h.icon) + '</div>' +
+          "<h4 data-edit=\"gh." + r.name + ".pt." + i + '.title">' + tx("gh." + r.name + ".pt." + i + ".title", h.title) + "</h4></div>" +
+          '<p data-edit="gh.' + r.name + ".pt." + i + '.desc">' + tx("gh." + r.name + ".pt." + i + ".desc", h.desc) + "</p>" +
+        "</div>"
+      );
+    }).join("");
+    const links = [];
+    if (r.repo) links.push('<a class="gh-link" href="' + r.repo + '" target="_blank" rel="noopener noreferrer">' + svg("github") + "<span>查看仓库</span></a>");
+    if (r.demo) links.push('<a class="gh-link gh-link--demo" href="' + r.demo + '" target="_blank" rel="noopener noreferrer">' + svg("external") + "<span>在线演示</span></a>");
+    const fullText = tx("gh." + r.name + ".full", r.full || r.desc || "");
+    const full = fullText.split(/\n+/).filter(function (s) { return s.trim(); })
+      .map(function (s) { return '<p class="prose reveal">' + s.trim() + "</p>"; }).join("");
+    return (
+      '<div class="wrap detail" style="--c1:' + r.accent + ";--c2:" + r.accent + '">' +
+        '<a class="detail-back" href="#/">' + svg("back") + " 返回首页</a>" +
+        '<div class="detail-hero reveal">' +
+          '<div class="detail-mark gh-detail-mark">' + svg(r.icon) + "</div>" +
+          "<div><h1 data-edit=\"gh." + r.name + '.name">' + tx("gh." + r.name + ".name", r.name) + "</h1>" +
+          '<div class="en" data-edit="gh.' + r.name + '.cn">' + tx("gh." + r.name + ".cn", r.cn) + "</div></div>" +
+        "</div>" +
+        '<p class="lead reveal gh-detail-lead" data-edit="gh.' + r.name + '.oneLine">' + tx("gh." + r.name + ".oneLine", r.oneLine || "") + "</p>" +
+        '<div class="gh-detail-links reveal">' + links.join("") + "</div>" +
+        '<div class="sec-label reveal">完整介绍</div>' +
+        '<div class="gh-detail-full">' + full + "</div>" +
+        '<div class="sec-label reveal">功能与细节</div>' +
+        '<div class="detail-grid">' + feats + "</div>" +
+      "</div>"
+    );
+  }
+
   /* ---------- 路由 ---------- */
   let savedScrollY = 0;
   function route() {
     const h = location.hash || "#/";
+    const mGh = h.match(/^#\/gh\/([\w.\-]+)/);
     const m = h.match(/^#\/p\/([\w-]+)/);
     const app = document.getElementById("app");
-    if (m) {
+    if (mGh) {
+      savedScrollY = window.scrollY;
+      app.innerHTML = renderGhDetail(decodeURIComponent(mGh[1]));
+      window.scrollTo(0, 0);
+    } else if (m) {
       const p = window.PROJECTS.find(function (x) { return x.slug === m[1]; });
       if (!p || p.disabled) { location.hash = "#/"; return; }
       savedScrollY = window.scrollY;
@@ -569,6 +614,12 @@
       if (bj) {
         e.preventDefault();
         openBonjourModal(bj.getAttribute("href"));
+        return;
+      }
+      const ghCard = e.target.closest(".gh-card");
+      if (ghCard) {
+        if (e.target.closest("a")) return; // 点链接（查看仓库/在线演示/完整介绍）交给浏览器处理
+        location.hash = "#/gh/" + ghCard.getAttribute("data-gh");
         return;
       }
       const card = e.target.closest(".card");
