@@ -18,11 +18,16 @@
     saveTimer = setTimeout(saveEdits, 250);
   }
   // 显示文字：优先用用户改过的覆盖值
-  // DEFAULTS 顺便记下每个 key 的默认文案，供「复制改动」时对比出改了哪几处
+  // DEFAULTS 记下每个 key 的默认文案，用于「复制改动」比对
+  // 若本地改动与文件里的默认文案已经一致（说明改动已被采纳上线），则不再覆盖——用户无需手动清缓存
   const DEFAULTS = {};
+  function normText(s) { return String(s == null ? "" : s).replace(/\s+/g, " ").trim(); }
   function tx(key, text) {
-    if (DEFAULTS[key] === undefined) DEFAULTS[key] = String(text == null ? "" : text);
-    return OVERRIDES[key] != null ? OVERRIDES[key] : text;
+    const def = String(text == null ? "" : text);
+    if (DEFAULTS[key] === undefined) DEFAULTS[key] = def;
+    const ov = OVERRIDES[key];
+    if (ov != null && normText(ov) !== normText(def)) return ov;
+    return text;
   }
 
   const ICONS = {
@@ -629,8 +634,17 @@
     const text = editsAsText();
     const n = changedList().length;
     const done = function (ok) {
-      if (ok) toast(n ? "已复制 " + n + " 处改动，粘贴发给我就行" : "当前没有改动");
-      else alert("复制失败，请改用「导出文件」");
+      if (!ok) { alert("复制失败，请改用「导出文件」"); return; }
+      toast(n ? "已复制 " + n + " 处改动" : "当前没有改动");
+      if (!n) return;
+      /* 本地改动一旦复制发出，就交回给文件维护者；
+         若不清掉，我更新上线后你手机上仍会显示你自己那版，会以为没改。 */
+      if (confirm("已复制 " + n + " 处改动，粘贴发我即可。\n\n要顺便清掉本地改动吗？\n· 清掉：等我更新上线，你就能看到新版\n· 不清：你手机上会一直显示你自己改的版本")) {
+        OVERRIDES = {};
+        try { localStorage.removeItem(LS_KEY); } catch (e) {}
+        route();
+        refreshEditCount();
+      }
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallbackCopy(text)); });
