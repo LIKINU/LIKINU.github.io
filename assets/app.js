@@ -51,6 +51,9 @@
     cap: '<path d="M2 9l10-4 10 4-10 4L2 9Z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/><path d="M22 9v5"/>',
     strategy: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>',
     funnel: '<path d="M3 5h18l-7 8v6l-4 2v-8L3 5Z"/>',
+    /* GitHub 栏目专用 */
+    github: '<path d="M9 19c-4.3 1.4-4.3-2.1-6-2.5M15 21v-3.4c0-1 .1-1.5-.5-2.1 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 3.4 5.4 3.7 5.4 3.7a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 10.1c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2.1V21"/>',
+    external: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   };
   function svg(name) {
     return '<svg viewBox="0 0 24 24">' + (ICONS[name] || "") + "</svg>";
@@ -262,6 +265,27 @@
       );
     }).join("");
 
+    /* ---------- GitHub 开源仓库卡片 ---------- */
+    const GH = window.GITHUB || { repos: [] };
+    const ghCards = (GH.repos || []).map(function (r) {
+      const links = [];
+      if (r.repo) links.push('<a class="gh-link" href="' + r.repo + '" target="_blank" rel="noopener noreferrer">' + svg("github") + '<span data-edit="gh.' + r.name + '.repoText">' + tx("gh." + r.name + ".repoText", "查看仓库") + '</span></a>');
+      if (r.demo) links.push('<a class="gh-link gh-link--demo" href="' + r.demo + '" target="_blank" rel="noopener noreferrer">' + svg("external") + '<span data-edit="gh.' + r.name + '.demoText">' + tx("gh." + r.name + ".demoText", "在线演示") + '</span></a>');
+      return (
+        '<article class="gh-card reveal" style="--c:' + r.accent + '">' +
+          '<div class="gh-top">' +
+            '<div class="gh-icon">' + svg(r.icon || "github") + '</div>' +
+            '<div class="gh-titles">' +
+              '<h3 class="gh-name" data-edit="gh.' + r.name + '.name">' + tx("gh." + r.name + ".name", r.name) + '</h3>' +
+              '<div class="gh-cn" data-edit="gh.' + r.name + '.cn">' + tx("gh." + r.name + ".cn", r.cn) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<p class="gh-desc" data-edit="gh.' + r.name + '.desc">' + tx("gh." + r.name + ".desc", r.desc) + '</p>' +
+          '<div class="gh-links">' + links.join("") + '</div>' +
+        '</article>'
+      );
+    }).join("");
+
     const roles = window.ROLES.map(function (g, gi) {
       const items = g.items.map(function (it, ii) {
         const sub = it.b ? '<div class="role-b" data-edit="role.' + gi + '.item.' + ii + '.b">' + tx("role." + gi + ".item." + ii + ".b", it.b) + '</div>' : "";
@@ -336,9 +360,18 @@
         '</div>' +
       '</section>' +
 
-      '<section class="section alt" id="skills">' +
+      '<section class="section alt" id="github">' +
         '<div class="wrap">' +
-          secHead("04", "sec.skills.label", "核心能力 / SKILLS") +
+          secHead("04", "sec.github.label", "开源仓库 / GITHUB") +
+          '<h2 class="sec-h reveal" data-edit="sec.github.h">GitHub 上的四个仓库</h2>' +
+          '<p class="sec-sub reveal" data-edit="sec.github.sub">' + tx("sec.github.sub", GH.lead || "") + '</p>' +
+          '<div class="gh-grid">' + ghCards + '</div>' +
+        '</div>' +
+      '</section>' +
+
+      '<section class="section" id="skills">' +
+        '<div class="wrap">' +
+          secHead("05", "sec.skills.label", "核心能力 / SKILLS") +
           '<h2 class="sec-h reveal" data-edit="sec.skills.h">六项核心能力</h2>' +
           '<p class="sec-sub reveal" data-edit="sec.skills.sub">团队组织、品牌宣传、公开表达、文艺素养、商业运营、AI 产品——六项能力都来自真实做过的事。</p>' +
           '<div class="ability-grid">' + skills + '</div>' +
@@ -347,7 +380,7 @@
 
       '<section class="section" id="ecosystem">' +
         '<div class="wrap">' +
-          secHead("05", "sec.ecosystem.label", "生态与任职 / ECOSYSTEM") +
+          secHead("06", "sec.ecosystem.label", "生态与任职 / ECOSYSTEM") +
           '<h2 class="sec-h reveal" data-edit="sec.ecosystem.h">任职与关系网络</h2>' +
           '<p class="sec-sub reveal" data-edit="sec.ecosystem.sub">校外任职、校内任职、生态背书与创业项目之间的关系网络。</p>' +
           '<div class="eco-wrap">' +
@@ -359,7 +392,7 @@
 
       '<section class="section alt" id="honors">' +
         '<div class="wrap">' +
-          secHead("06", "sec.honors.label", "荣誉与证书 / HONORS") +
+          secHead("07", "sec.honors.label", "荣誉与证书 / HONORS") +
           '<h2 class="sec-h reveal" data-edit="sec.honors.h">中学时期的奖项与证书</h2>' +
           '<p class="sec-sub reveal" data-edit="sec.honors.sub">辩论、管乐、体育、学科四条线的获奖记录与培训证书。</p>' +
           '<div class="honor-grid">' + honorGroups + '</div>' +

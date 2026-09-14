@@ -341,3 +341,44 @@ window.CERTS = [
   "明日青年领袖培训计划实习证、跨区辩论交流参赛证",
   "艺术教育雪球计划玻璃琉璃工坊学习证明",
 ];
+
+/* ---------- GitHub 开源仓库 ---------- */
+window.GITHUB = {
+  lead: "把做过的东西开源出来。从这张个人主页，到生成艺术工具、AI 创业沙盘和营销方案生成器 —— 代码都在下面。",
+  repos: [
+    {
+      name: "KeepTheStartupAlive",
+      cn: "KTSA · AI 创业商业沙盘",
+      accent: "#7C5CFF",
+      icon: "twin",
+      desc: "让创业者在虚拟环境里把真实决策先预演一遍。核心是 20 轮经营周期：每轮系统自动抛出经营事件（融资谈判、竞品入侵、核心成员离职），团队的数字孪生角色基于各自的资料设定发言、辩论，用户以 CEO 身份参与决策，每轮结束后系统评估该决策对组织状态的影响。跑完自动生成复盘报告——对话过程回顾、决策轨迹分析、关键驱动因素、替代结局推演。适用于融资前压力测试、关键会议预演、投后决策质量评估与企业高管培训。技术上为 Next.js + TypeScript + Prisma，本地 SQLite、生产 PostgreSQL，Docker 部署，模型可接 DeepSeek 或 OpenAI。",
+      repo: "https://github.com/LIKINU/KeepTheStartupAlive",
+    },
+    {
+      name: "flow-art",
+      cn: "撞色流场引擎",
+      accent: "#FF2D78",
+      icon: "palette",
+      desc: "浏览器里就能跑的生成艺术工具，打开即用、不用装任何东西。10 种流场形态（漩涡、气流、放射、多涡、湍流、波纹、螺旋、绽放、编织、折叠）搭配 8 套撞色配色，也可以自己调；湍流强度、速度、拖尾、密度全部实时可调。做完能导出 1×/2×/4× 的 PNG/JPG、批量 5 张、60–1080 帧的 GIF，也能直接录下流动过程，最近 30 张作品自动存档。整个工具是一个单文件 HTML，零依赖。",
+      repo: "https://github.com/LIKINU/flow-art",
+      demo: "https://likinu.github.io/flow-art/",
+    },
+    {
+      name: "marketing-skill",
+      cn: "营销方案生成器",
+      accent: "#0EA5A4",
+      icon: "report",
+      desc: "把客户情况说清楚，它给你一份完整的营销方案 Word 文档——不是查资料，是生成方案。它被刻意设计成「先问再写」：动手前对照 13 项门禁核对你缺哪些信息（卖什么、卖给谁、预算、时间死线、目标字数……），一次性问完，再产出一张《任务规则表》等你确认，确认之前不出任何方案内容。里面沉淀了 104 条营销打法库、18 个行业案例集与 63 个模型手册，交付前还会逐项跑一遍自检清单。作为 Agent Skill 运行，Python 实现。",
+      repo: "https://github.com/LIKINU/marketing-skill",
+    },
+    {
+      name: "LIKINU.github.io",
+      cn: "本站 · 个人主页",
+      accent: "#3370FF",
+      icon: "scene",
+      desc: "你现在看到的这一页。纯静态 HTML / CSS / JavaScript 手写，没有框架也没有构建步骤，推上 GitHub 就自动发布。做了深浅两套主题和 9 套可切换的视觉皮肤（星空暗色是其中之一），桌面端时间轴走横向、手机端自动转竖向，导航栏在窄屏会自动压缩排布以保证不折行——这些适配都是一行行量出来的。",
+      repo: "https://github.com/LIKINU/LIKINU.github.io",
+      demo: "https://likinu.github.io/",
+    },
+  ],
+};
