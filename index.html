@@ -26,7 +26,7 @@
   </script>
   <title>李鍵宇 / Rain Li · 个人主页</title>
   <meta name="description" content="李鍵宇（Rain Li）——零予控股 CEO / KTSA 创始人。用 AI 与营销，把分散的资源连成自我造血的创业生态。" />
-  <link rel="stylesheet" href="assets/style.css?v=20260874" />
+  <link rel="stylesheet" href="assets/style.css?v=20260875" />
   <link rel="stylesheet" href="assets/templates.css?v=20260846" />
 </head>
 <body>
@@ -45,6 +45,7 @@
         <a href="#skills">能力</a>
         <a href="#projects">项目</a>
         <a href="#contact">联系</a>
+        <button class="icon-btn" id="editBtn" aria-label="编辑文字" title="编辑文字"></button>
         <button class="theme-btn" id="themeBtn" aria-label="切换主题"></button>
       </nav>
     </div>
@@ -53,16 +54,18 @@
   <main id="app"><!-- 由 app.js 渲染 --></main>
 
   <div class="edit-tools" id="editTools" hidden>
-    <span class="et-tip">编辑模式：点任意文字即可修改</span>
-    <button id="etExport" type="button">导出修改</button>
-    <button id="etImport" type="button">导入修改</button>
+    <span class="et-tip">点任意文字直接改</span>
+    <span class="et-count" id="etCount">已改 0 处</span>
+    <button id="etCopy" type="button" class="et-main">复制改动发我</button>
+    <button id="etExport" type="button">导出文件</button>
+    <button id="etImport" type="button">导入</button>
     <button id="etReset" type="button">恢复默认</button>
   </div>
   <input type="file" id="etFile" accept="application/json,.json" hidden />
 
 
   <script src="assets/data.js?v=20260835"></script>
-  <script src="assets/app.js?v=20260846"></script>
+  <script src="assets/app.js?v=20260847"></script>
   <script src="assets/fx.js?v=20260846"></script>
   <script>
   /* logo 跟随：上半段居中，滚到 footer 顶线时整体随上方内容上滑、停在线上方。

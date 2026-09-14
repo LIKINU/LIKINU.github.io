@@ -18,7 +18,12 @@
     saveTimer = setTimeout(saveEdits, 250);
   }
   // 显示文字：优先用用户改过的覆盖值
-  function tx(key, text) { return OVERRIDES[key] != null ? OVERRIDES[key] : text; }
+  // DEFAULTS 顺便记下每个 key 的默认文案，供「复制改动」时对比出改了哪几处
+  const DEFAULTS = {};
+  function tx(key, text) {
+    if (DEFAULTS[key] === undefined) DEFAULTS[key] = String(text == null ? "" : text);
+    return OVERRIDES[key] != null ? OVERRIDES[key] : text;
+  }
 
   const ICONS = {
     hub: '<circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 7l3 4M17 7l-3 4M7 17l3-4M17 17l-3-4"/>',
@@ -54,6 +59,8 @@
     /* GitHub 栏目专用 */
     github: '<path d="M9 19c-4.3 1.4-4.3-2.1-6-2.5M15 21v-3.4c0-1 .1-1.5-.5-2.1 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 3.4 5.4 3.7 5.4 3.7a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 10.1c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2.1V21"/>',
     external: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
   };
   function svg(name) {
     return '<svg viewBox="0 0 24 24">' + (ICONS[name] || "") + "</svg>";
@@ -333,7 +340,7 @@
       '<section class="section alt" id="about">' +
         '<div class="wrap">' +
           secHead("01", "sec.about.label", "关于我 / ABOUT ME") +
-          '<h2 class="sec-h reveal" data-edit="sec.about.h">我是谁，我在做什么</h2>' +
+          '<h2 class="sec-h reveal" data-edit="sec.about.h">' + tx("sec.about.h", "我是谁，我在做什么") + '</h2>' +
           '<div class="about-cols">' +
             '<div class="about-text">' + aboutP + '</div>' +
             '<div class="kpis">' + kpis + '</div>' +
@@ -345,8 +352,8 @@
       '<section class="section" id="journey">' +
         '<div class="wrap">' +
           secHead("02", "sec.journey.label", "成长轨迹 / JOURNEY") +
-          '<h2 class="sec-h reveal" data-edit="sec.journey.h">关键节点</h2>' +
-          '<p class="sec-sub reveal" data-edit="sec.journey.sub">从中学到创业，按时间线记录关键节点。</p>' +
+          '<h2 class="sec-h reveal" data-edit="sec.journey.h">' + tx("sec.journey.h", "关键节点") + '</h2>' +
+          '<p class="sec-sub reveal" data-edit="sec.journey.sub">' + tx("sec.journey.sub", "从中学到创业，按时间线记录关键节点。") + '</p>' +
           '<div class="timeline">' + timeline + '</div>' +
         '</div>' +
       '</section>' +
@@ -354,8 +361,8 @@
       '<section class="section" id="projects">' +
         '<div class="wrap">' +
           secHead("03", "sec.projects.label", "核心项目 / PROJECTS") +
-          '<h2 class="sec-h reveal" data-edit="sec.projects.h">四个核心项目</h2>' +
-          '<p class="sec-sub reveal" data-edit="sec.projects.sub">零予生态、KTSA、零予AI商学体系、新生流量池——点击任意卡片查看完整介绍。</p>' +
+          '<h2 class="sec-h reveal" data-edit="sec.projects.h">' + tx("sec.projects.h", "四个核心项目") + '</h2>' +
+          '<p class="sec-sub reveal" data-edit="sec.projects.sub">' + tx("sec.projects.sub", "零予生态、KTSA、零予AI商学体系、新生流量池——点击任意卡片查看完整介绍。") + '</p>' +
           '<div class="cards">' + cards + '</div>' +
         '</div>' +
       '</section>' +
@@ -363,7 +370,7 @@
       '<section class="section alt" id="github">' +
         '<div class="wrap">' +
           secHead("04", "sec.github.label", "开源仓库 / GITHUB") +
-          '<h2 class="sec-h reveal" data-edit="sec.github.h">GitHub 上的四个仓库</h2>' +
+          '<h2 class="sec-h reveal" data-edit="sec.github.h">' + tx("sec.github.h", "GitHub 上的四个仓库") + '</h2>' +
           '<p class="sec-sub reveal" data-edit="sec.github.sub">' + tx("sec.github.sub", GH.lead || "") + '</p>' +
           '<div class="gh-grid">' + ghCards + '</div>' +
         '</div>' +
@@ -372,8 +379,8 @@
       '<section class="section" id="skills">' +
         '<div class="wrap">' +
           secHead("05", "sec.skills.label", "核心能力 / SKILLS") +
-          '<h2 class="sec-h reveal" data-edit="sec.skills.h">六项核心能力</h2>' +
-          '<p class="sec-sub reveal" data-edit="sec.skills.sub">团队组织、品牌宣传、公开表达、文艺素养、商业运营、AI 产品——六项能力都来自真实做过的事。</p>' +
+          '<h2 class="sec-h reveal" data-edit="sec.skills.h">' + tx("sec.skills.h", "六项核心能力") + '</h2>' +
+          '<p class="sec-sub reveal" data-edit="sec.skills.sub">' + tx("sec.skills.sub", "团队组织、品牌宣传、公开表达、文艺素养、商业运营、AI 产品——六项能力都来自真实做过的事。") + '</p>' +
           '<div class="ability-grid">' + skills + '</div>' +
         '</div>' +
       '</section>' +
@@ -381,8 +388,8 @@
       '<section class="section" id="ecosystem">' +
         '<div class="wrap">' +
           secHead("06", "sec.ecosystem.label", "生态与任职 / ECOSYSTEM") +
-          '<h2 class="sec-h reveal" data-edit="sec.ecosystem.h">任职与关系网络</h2>' +
-          '<p class="sec-sub reveal" data-edit="sec.ecosystem.sub">校外任职、校内任职、生态背书与创业项目之间的关系网络。</p>' +
+          '<h2 class="sec-h reveal" data-edit="sec.ecosystem.h">' + tx("sec.ecosystem.h", "任职与关系网络") + '</h2>' +
+          '<p class="sec-sub reveal" data-edit="sec.ecosystem.sub">' + tx("sec.ecosystem.sub", "校外任职、校内任职、生态背书与创业项目之间的关系网络。") + '</p>' +
           '<div class="eco-wrap">' +
             '<div class="role-grid">' + roles + '</div>' +
             '<div class="eco-viz reveal">' + networkSVG() + '</div>' +
@@ -393,20 +400,20 @@
       '<section class="section alt" id="honors">' +
         '<div class="wrap">' +
           secHead("07", "sec.honors.label", "荣誉与证书 / HONORS") +
-          '<h2 class="sec-h reveal" data-edit="sec.honors.h">中学时期的奖项与证书</h2>' +
-          '<p class="sec-sub reveal" data-edit="sec.honors.sub">辩论、管乐、体育、学科四条线的获奖记录与培训证书。</p>' +
+          '<h2 class="sec-h reveal" data-edit="sec.honors.h">' + tx("sec.honors.h", "中学时期的奖项与证书") + '</h2>' +
+          '<p class="sec-sub reveal" data-edit="sec.honors.sub">' + tx("sec.honors.sub", "辩论、管乐、体育、学科四条线的获奖记录与培训证书。") + '</p>' +
           '<div class="honor-grid">' + honorGroups + '</div>' +
-          '<div class="cert-card reveal"><div class="cert-title" data-edit="sec.honors.cert">资格证书 / CERTIFICATES</div><div class="cert-list">' + certChips + '</div></div>' +
+          '<div class="cert-card reveal"><div class="cert-title" data-edit="sec.honors.cert">' + tx("sec.honors.cert", "资格证书 / CERTIFICATES") + '</div><div class="cert-list">' + certChips + '</div></div>' +
         '</div>' +
       '</section>' +
 
       '<footer class="footer" id="contact">' +
         '<div class="wrap">' +
-          '<div class="footer-brand reveal" data-edit="footer.brand">李鍵宇 / Rain Li</div>' +
-          '<h2 class="reveal" data-edit="footer.h2">晚安，祝好梦</h2>' +
-          '<p class="reveal" data-edit="footer.p">合作 · 实习 · 项目共建</p>' +
+          '<div class="footer-brand reveal" data-edit="footer.brand">' + tx("footer.brand", "李鍵宇 / Rain Li") + '</div>' +
+          '<h2 class="reveal" data-edit="footer.h2">' + tx("footer.h2", "晚安，祝好梦") + '</h2>' +
+          '<p class="reveal" data-edit="footer.p">' + tx("footer.p", "合作 · 实习 · 项目共建") + '</p>' +
           '<div class="foot-chips reveal">' + foot + '</div>' +
-          '<div class="foot-note" data-edit="footer.note">© 2026 基于 Obsidian 自生长知识库构建 · Crafted with WorkBuddy <span class="ver-tag">v20261220</span></div>' +
+          '<div class="foot-note"><span data-edit="footer.note">' + tx("footer.note", "© 2026 基于 Obsidian 自生长知识库构建 · Crafted with WorkBuddy") + '</span> <span class="ver-tag">v20261220</span></div>' +
         '</div>' +
       '</footer>'
     );
@@ -577,14 +584,72 @@
   function clearEditable() {
     document.querySelectorAll("[data-edit]").forEach(function (el) { el.removeAttribute("contenteditable"); });
   }
+  /* 列出当前改动（拿本地值和默认文案比对出真正改了哪几处） */
+  function changedList() {
+    const out = [];
+    Object.keys(OVERRIDES).forEach(function (k) {
+      const now = String(OVERRIDES[k] == null ? "" : OVERRIDES[k]).replace(/\s+/g, " ").trim();
+      const before = DEFAULTS[k];
+      if (before === undefined) {
+        if (now) out.push({ key: k, before: "（本页未渲染，无法比对原文）", after: now });
+        return;
+      }
+      if (now !== String(before).replace(/\s+/g, " ").trim()) {
+        out.push({ key: k, before: String(before).replace(/\s+/g, " ").trim(), after: now });
+      }
+    });
+    return out;
+  }
+  function refreshEditCount() {
+    const el = document.getElementById("etCount");
+    if (el) el.textContent = "已改 " + changedList().length + " 处";
+  }
   function toggleEdit() {
     const on = document.body.classList.toggle("editing");
     const btn = document.getElementById("editBtn");
     const tools = document.getElementById("editTools");
-    if (on) { applyEditable(); btn.textContent = "完成编辑"; }
-    else { clearEditable(); btn.textContent = "编辑文字"; }
+    if (on) { applyEditable(); if (btn) btn.classList.add("is-on"); }
+    else { clearEditable(); if (btn) btn.classList.remove("is-on"); }
     tools.hidden = !on;
+    refreshEditCount();
     if (on) document.getElementById("app").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  /* 把改动整理成一段人看得懂、我也能直接用的文字 */
+  function editsAsText() {
+    const list = changedList();
+    if (!list.length) return "李鍵宇主页 · 当前没有文字改动。";
+    let s = "李鍵宇主页 · 文字改动（共 " + list.length + " 处）\n\n";
+    list.forEach(function (it, i) {
+      s += (i + 1) + "）" + it.key + "\n旧：" + it.before + "\n新：" + it.after + "\n\n";
+    });
+    s += "—— 以上改动发给 Rain 更新上线 ——";
+    return s;
+  }
+  function copyEdits() {
+    const text = editsAsText();
+    const n = changedList().length;
+    const done = function (ok) {
+      if (ok) toast(n ? "已复制 " + n + " 处改动，粘贴发给我就行" : "当前没有改动");
+      else alert("复制失败，请改用「导出文件」");
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallbackCopy(text)); });
+    } else {
+      done(fallbackCopy(text));
+    }
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
   }
   function exportEdits() {
     const blob = new Blob([JSON.stringify(OVERRIDES, null, 2)], { type: "application/json" });
@@ -598,11 +663,16 @@
     OVERRIDES = {};
     try { localStorage.removeItem(LS_KEY); } catch (e) {}
     route();
+    refreshEditCount();
   }
 
   function initEdit() {
     const editBtnEl = document.getElementById("editBtn");
-    if (editBtnEl) editBtnEl.addEventListener("click", toggleEdit);
+    if (editBtnEl) {
+      editBtnEl.innerHTML = svg("edit");
+      editBtnEl.addEventListener("click", toggleEdit);
+    }
+    document.getElementById("etCopy").addEventListener("click", copyEdits);
     document.getElementById("etExport").addEventListener("click", exportEdits);
     document.getElementById("etReset").addEventListener("click", resetEdits);
     const fileInput = document.getElementById("etFile");
@@ -617,6 +687,7 @@
           OVERRIDES = Object.assign({}, OVERRIDES, obj);
           saveEdits();
           route();
+          refreshEditCount();
         } catch (e) { alert("文件格式错误，请导入导出的 JSON 文件"); }
       };
       r.readAsText(f);
@@ -628,6 +699,17 @@
       if (t.hasAttribute && t.hasAttribute("data-edit")) {
         OVERRIDES[t.getAttribute("data-edit")] = t.textContent;
         saveEditsDebounced();
+        refreshEditCount();
+      }
+    });
+    // 编辑模式下：输入框内回车不插入换行（避免撑坏排版），Esc 退出编辑
+    document.addEventListener("keydown", function (e) {
+      if (!document.body.classList.contains("editing")) return;
+      if (e.key === "Escape") { toggleEdit(); return; }
+      const t = e.target;
+      if (e.key === "Enter" && t.hasAttribute && t.hasAttribute("data-edit")) {
+        e.preventDefault();
+        t.blur();
       }
     });
   }
