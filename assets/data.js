@@ -382,7 +382,7 @@ window.GITHUB = {
       demo: "https://likinu.github.io/",
     },
     {
-      name: "marketing-skill",
+      name: "marketing-playbook",
       cn: "营销方案生成器",
       accent: "#0EA5A4",
       icon: "report",
@@ -396,7 +396,7 @@ window.GITHUB = {
         { icon: "report", title: "交付物", desc: "最终产出一份完整 Word 文档：现状分析报告、营销策划方案、预算明细、行动清单、风险与假设——不是聊天里的文字，是能直接交出去的成品。" },
         { icon: "ai", title: "运行方式", desc: "作为 Agent Skill 运行，用 Python 脚本做门禁校验、深度检查、预算校验与自检，并生成最终的 docx 文件。" },
       ],
-      repo: "https://github.com/LIKINU/marketing-skill",
+      repo: "https://github.com/LIKINU/marketing-playbook",
     },
     {
       name: "flow-art",
