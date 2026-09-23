@@ -1,24 +1,18 @@
 /* ===== 浮夸素材引擎 v2（原站排版 · 素材库动效合集） ===== */
 (function () {
   "use strict";
-  var TPL = "white"; // 星空配色方案；是否显示由 <html data-tpl="white"> 控制（仅暗色模式）
 
-  /* ---------- 装饰层 ---------- */
+  /* ---------- 装饰层（星空粒子画布 · 仅暗色模式显示） ---------- */
   var decor = document.createElement("div");
   decor.id = "tplDecor";
-  decor.innerHTML = '<canvas id="fxCanvas"></canvas><div class="meteors" id="meteors"></div>';
+  decor.innerHTML = '<canvas id="fxCanvas"></canvas>';
   document.body.appendChild(decor);
-  var spot = document.createElement("div");
-  spot.id = "spotFx";
-  document.body.appendChild(spot);
 
   /* ---------- 交互粒子场（React Bits 粒子场 · 鼠标推开） ---------- */
   var cvs = decor.querySelector("#fxCanvas"), ctx = cvs.getContext("2d");
   var parts = [], mx = innerWidth / 2, my = innerHeight / 2;
   function pickColor(r) {
-    if (TPL === "rose") return r > .82 ? "#ffffff" : (r > .5 ? "#FFD3EC" : (r > .25 ? "#FFB0E0" : "#FF8FD0"));
-    if (TPL === "white") return r > .94 ? "#2A6CFF" : (r > .5 ? "#ffffff" : "#ff8fd0");
-    return r > .82 ? "#ffffff" : "rgba(190,205,255,1)";
+    return r > .94 ? "#2A6CFF" : (r > .5 ? "#ffffff" : "#ff8fd0");
   }
   function makeParts() {
     parts = [];
@@ -51,24 +45,6 @@
   window.__startStars = function () { if (starsOn) return; starsOn = true; if (!decor.parentNode) document.body.appendChild(decor); sizeCanvas(); loop(); };
   window.__stopStars = function () { starsOn = false; };
   if (starsOn) loop();
-
-  /* ---------- 流星（Aceternity Meteors） ---------- */
-  var metWrap = document.getElementById("meteors");
-  for (var mi = 0; mi < 8; mi++) {
-    var m = document.createElement("span");
-    m.className = "meteor";
-    m.style.setProperty("--mx0", (12 + Math.random() * 80) + "vw");
-    m.style.setProperty("--my0", (4 + Math.random() * 30) + "%");
-    m.style.setProperty("--d", (Math.random() * 3).toFixed(2) + "s");
-    m.style.setProperty("--t", (2.2 + Math.random() * 1.6).toFixed(2) + "s");
-    metWrap.appendChild(m);
-  }
-
-  /* ---------- 聚光灯（Aceternity Spotlight） ---------- */
-  document.addEventListener("mousemove", function (e) {
-    spot.style.setProperty("--mx", e.clientX + "px");
-    spot.style.setProperty("--my", e.clientY + "px");
-  });
 
   /* ---------- 标题特效 ---------- */
   function splitTitle() {
