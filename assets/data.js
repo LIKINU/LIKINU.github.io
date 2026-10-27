@@ -5,7 +5,7 @@ window.PROFILE = {
   en: "RAIN LI",
   role: "零予控股 CEO",
   badge: "中南财经政法大学 · Marketing · 澳门保送生",
-  tagline: "用 AI 与营销，把分散的资源连成自我造血的创业生态。",
+  tagline: "AI MARKETING ECO",
   heroCard: [
     { k: "身份", v: "零予控股 CEO" },
     { k: "学籍", v: "中南财经政法大学 · Marketing" },
